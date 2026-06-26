@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 const FEATURES = [
   {
     icon:"🔮",
-    title:"Free Birth Chart",
+    title:"Birth Chart Analysis",
     subtitle:"Janma Kundali",
-    desc:"Your complete Vedic birth chart — all planetary positions, all 12 houses, yogas, Vimshottari dasha timeline, classical remedies. Sidereal · Lahiri Ayanamsa · Whole Sign.",
+    desc:"Your complete Vedic birth chart — all planetary positions, all 12 houses, yogas, Vimshottari dasha timeline, and classical remedies. Sidereal · Lahiri Ayanamsa · Whole Sign.",
     link:"/kundali",
     cta:"Get My Chart →",
-    points:["All 9 planets + Lagna", "Active Mahadasha & Antardasha", "Yogas present in your chart", "Classical remedies for every planet", "AI Pandit reading powered by Grok"],
+    points:["All 9 planets + Lagna", "Active Mahadasha & Antardasha", "Yogas present in your chart", "Classical remedies for every planet", "Deep Vedic Pandit reading"],
   },
   {
     icon:"💑",
@@ -17,12 +17,12 @@ const FEATURES = [
     desc:"Traditional 8-fold Vedic compatibility analysis. Enter both birth details and receive a complete Ashtakoot report with dosha analysis and a detailed AI compatibility reading.",
     link:"/matching",
     cta:"Check Compatibility →",
-    points:["Full Ashtakoot (36 points)", "All 8 kootas scored", "Mangal, Nadi & Bhakoot Dosha", "Moon sign compatibility", "AI Pandit compatibility reading"],
+    points:["Full Ashtakoot (36 points)", "All 8 kootas scored", "Mangal, Nadi & Bhakoot Dosha", "Moon sign compatibility", "Vedic Pandit compatibility reading"],
   },
 ];
 
 const PRINCIPLES = [
-  { icon:"✦", title:"Completely Free", desc:"Every feature on this site is free and will remain free. No subscriptions, no paywalls, no ads. This is our service to humanity." },
+  { icon:"✦", title:"Ancient & Authentic", desc:"Rooted in the living tradition of Jyotish — every calculation, every interpretation, every remedy drawn from the original Sanskrit shastras." },
   { icon:"✦", title:"Classical & Accurate", desc:"Built on Brihat Parashara Hora Shastra, Swiss Ephemeris, and Lahiri Ayanamsa — the same standards used by learned Jyotishis worldwide." },
   { icon:"✦", title:"For All Humans", desc:"Astrology is a gift to all of humanity. We do not charge for wisdom. Whether you are from Nepal, India, or any corner of the world — this is yours." },
   { icon:"✦", title:"Remedies That Work", desc:"Classical remedies grounded in devotion and simplicity — mantras, daan, fasting, flowers, and puja. Nothing commercial. Nothing harmful." },
@@ -40,10 +40,10 @@ export default function Home() {
           <p style={S.tagline}>पवित्र ज्योतिष — Pure Vedic Astrology</p>
           <p style={S.sub}>
             Authentic Vedic birth chart analysis and Kundali matching —
-            completely free, for every human being on Earth.
+            classical, precise, and open to every human being on Earth.
           </p>
           <div style={S.heroBtns}>
-            <Link to="/kundali"  style={S.btnPrimary}>Get My Free Birth Chart</Link>
+            <Link to="/kundali"  style={S.btnPrimary}>Get My Birth Chart</Link>
             <Link to="/matching" style={S.btnSecondary}>Check Kundali Matching</Link>
           </div>
         </div>
@@ -54,8 +54,8 @@ export default function Home() {
         {[
           "🔮 Sidereal · Lahiri Ayanamsa",
           "📿 Classical BPHS Tradition",
-          "✦ Free for All Humanity",
-          "🤖 AI Pandit via Grok",
+          "✦ Open to All of Humanity",
+          "✦ Deep Vedic Interpretation",
           "🌍 Worldwide Access",
         ].map(t => <span key={t} style={S.trustItem}>{t}</span>)}
       </div>
@@ -82,7 +82,7 @@ export default function Home() {
       <section style={S.principles}>
         <div style={S.principlesInner}>
           <h2 style={S.secTitle}>Our Principles</h2>
-          <p style={S.secSub}>Why we built this, and why it will always be free</p>
+          <p style={S.secSub}>The principles that guide every reading on this site</p>
           <div style={S.principleGrid}>
             {PRINCIPLES.map(p => (
               <div key={p.title} style={S.principleCard}>
@@ -111,7 +111,7 @@ export default function Home() {
       <footer style={S.footer}>
         <div style={S.footerOM}>ॐ</div>
         <p style={S.footerText}>Pavitra Jyotish · पवित्र ज्योतिष</p>
-        <p style={S.footerSub}>Free Vedic Astrology for all of humanity · Built with devotion</p>
+        <p style={S.footerSub}>Classical Vedic Astrology · Built with devotion</p>
       </footer>
     </div>
   );

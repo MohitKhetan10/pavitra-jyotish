@@ -666,11 +666,11 @@ export default function Matchmaking() {
               <div style={{ textAlign:"center", marginBottom:20 }}>
                 <div style={{ fontSize:32, color:G }}>ॐ</div>
                 <h2 style={{ color:GSFT, fontSize:22, margin:"6px 0 4px", fontFamily:"Georgia,serif" }}>
-                  AI Pandit — Complete Compatibility Reading
+                  Pandit's Vachana — Complete Compatibility Reading
                 </h2>
                 <p style={{ color:MUTED, fontSize:13, fontFamily:"system-ui,sans-serif", maxWidth:560, margin:"0 auto" }}>
                   10-section analysis: Moon · Rajju/Vedha · Doshas with Remedies · 7th House ·
-                  Venus · Darakaraka · Lagna · Past-Life Karma · Dasha Timing · Complete Blessings
+                  Venus · Darakaraka · Lagna · Past-Life Karma · Dasha Timing · Blessings
                 </p>
               </div>
 
@@ -680,7 +680,7 @@ export default function Matchmaking() {
                                   background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
                                   border:`1px solid ${G}`, borderRadius:10, color:GSFT,
                                   fontSize:15, fontWeight:"bold", cursor:"pointer", letterSpacing:1 }}>
-                  {aiLoading ? "Consulting the Pandit…" : "✦ Get Complete AI Pandit Reading"}
+                  {aiLoading ? "Consulting the Pandit…" : "✦ Get Complete Pandit Reading"}
                 </button>
               )}
 
@@ -705,7 +705,7 @@ export default function Matchmaking() {
                            fontFamily:"system-ui,sans-serif", lineHeight:1.6 }}>
               This analysis is for spiritual guidance only, based on classical Vedic texts.
               It does not substitute for the judgment of a learned Jyotishi.<br/>
-              Made with devotion · Free for all humanity · Pavitra Jyotish ॐ
+              Made with devotion · Pavitra Jyotish ॐ
             </div>
           </div>
         )}

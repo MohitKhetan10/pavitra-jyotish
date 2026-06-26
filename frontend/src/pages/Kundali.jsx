@@ -449,7 +449,7 @@ export default function Kundali() {
       <header style={S.header}>
         <div style={S.om}>ॐ</div>
         <h1 style={S.title}>Janma Kundali</h1>
-        <p style={S.subtitle}>Free Vedic Birth Chart · Sidereal · Lahiri Ayanamsa · Deep Classical Analysis</p>
+        <p style={S.subtitle}>Vedic Birth Chart · Sidereal · Lahiri Ayanamsa · Deep Classical Analysis</p>
       </header>
 
       {/* ── BIRTH FORM ── */}
@@ -680,11 +680,11 @@ export default function Kundali() {
             ))}
           </div>
 
-          {/* ── AI PANDIT (GROK) ── */}
+          {/* ── PANDIT READING ── */}
           <div style={S.section}>
-            <h2 style={S.secTitle}>Pandit's Vachana — AI Reading</h2>
+            <h2 style={S.secTitle}>Pandit's Vachana — Classical Reading</h2>
             <p style={S.hint}>
-              Powered by Grok · Brihat Parashara Hora Shastra · Phaladeepika · Saravali
+              Brihat Parashara Hora Shastra · Phaladeepika · Saravali · Jataka Parijata
             </p>
             {!interpretation && !interpreting && (
               <button style={S.aiBtn} onClick={getInterpretation}>

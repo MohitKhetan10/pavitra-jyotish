@@ -21,7 +21,7 @@ export default function Nav() {
             {l.label}
           </Link>
         ))}
-        <span style={S.free}>Free for All ✦</span>
+        <span style={S.free}>Pavitra ✦</span>
       </div>
     </nav>
   );
