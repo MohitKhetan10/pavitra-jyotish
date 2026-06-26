@@ -24,8 +24,8 @@ class MatchRequest(BaseModel):
     p2: BirthDetails
 
 def _grok_client():
-    api_key = os.environ.get("XAI_API_KEY", "")
-    return api_key, AsyncOpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    return api_key, AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
 @app.get("/")
 def health():
@@ -57,7 +57,7 @@ async def interpret(request: Request):
     api_key, client = _grok_client()
     if not api_key:
         async def no_key():
-            yield "⚠ XAI_API_KEY not set in backend/.env"
+            yield "⚠ GROQ_API_KEY not set in backend/.env"
         return StreamingResponse(no_key(), media_type="text/plain")
 
     lagna   = data.get("lagna", {})
@@ -112,7 +112,7 @@ Write a complete, detailed reading with bold headers for each section:
 
     async def stream():
         response = await client.chat.completions.create(
-            model="grok-3-latest",
+            model="llama-3.3-70b-versatile",
             messages=[{"role":"user","content":prompt}],
             stream=True, max_tokens=2500,
         )
@@ -128,7 +128,7 @@ async def match_interpret(request: Request):
     api_key, client = _grok_client()
     if not api_key:
         async def no_key():
-            yield "⚠ XAI_API_KEY not set in backend/.env"
+            yield "⚠ GROQ_API_KEY not set in backend/.env"
         return StreamingResponse(no_key(), media_type="text/plain")
 
     m = data.get("match", {})
@@ -274,7 +274,7 @@ Write approximately 1400–1700 words. Be warm, deeply specific to these two cha
 
     async def stream():
         response = await client.chat.completions.create(
-            model="grok-3-latest",
+            model="llama-3.3-70b-versatile",
             messages=[{"role":"user","content":prompt}],
             stream=True, max_tokens=3800,
         )
