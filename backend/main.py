@@ -60,61 +60,152 @@ async def interpret(request: Request):
             yield "⚠ GROQ_API_KEY not set in backend/.env"
         return StreamingResponse(no_key(), media_type="text/plain")
 
-    lagna   = data.get("lagna", {})
-    planets = data.get("planets", [])
-    houses  = data.get("houses", [])
-    dasha   = data.get("current_dasha", {})
-    antard  = data.get("current_antardasha", {})
-    yogas   = data.get("yogas", [])
+    lagna    = data.get("lagna", {})
+    planets  = data.get("planets", [])
+    houses   = data.get("houses", [])
+    dasha    = data.get("current_dasha", {})
+    antard   = data.get("current_antardasha", {})
+    yogas    = data.get("yogas", [])
+    vimsh    = data.get("vimshottari", [])
 
     planet_lines = "\n".join(
-        f"  {p['name']}: {p['sign_en']} {p['degree_in_sign']}° | House {p['house']} | {p['nakshatra']} Pada {p['pada']}"
+        f"  {p['name']}: {p['sign_en']} {p['degree_in_sign']:.2f}° | House {p['house']} | "
+        f"{p['nakshatra']} Pada {p['pada']} | Lord: {p.get('nakshatra_lord','')}"
         + (" [Retrograde]" if p["retrograde"] else "")
-        + (" [Combust]" if p.get("combust") else "")
+        + (" [Combust]"    if p.get("combust") else "")
         for p in planets
     )
     house_lines = "\n".join(
-        f"  H{h['house']} {h['sign_en']} (lord {h['lord']})"
-        + (f" → {', '.join(h['planets'])}" if h['planets'] else " → empty")
+        f"  H{h['house']} {h['sign_en']} (lord {h['lord']}) → "
+        + (", ".join(h['planets']) if h['planets'] else "empty")
         for h in houses
     )
-    yoga_lines  = "\n".join(f"  {y['name']}: {y['desc']}" for y in yogas) or "  None detected"
-    dasha_line  = f"{dasha.get('lord')} Mahadasha until {dasha.get('end')}"
-    antard_line = f"{antard.get('lord')} Antardasha until {antard.get('end')}" if antard else "—"
+    yoga_lines = "\n".join(f"  {y['name']}: {y['desc']}" for y in yogas) or "  None detected"
+    dasha_line  = f"{dasha.get('lord')} Mahadasha until {dasha.get('end','?')}"
+    antard_line = f"{antard.get('lord')} Antardasha until {antard.get('end','?')}" if antard else "—"
+    vimsh_lines = "\n".join(
+        f"  {d.get('lord')} Mahadasha: {d.get('start','?')} → {d.get('end','?')}"
+        for d in vimsh
+    ) if vimsh else "  Not available"
 
-    prompt = f"""You are a deeply learned Vedic Jyotishi trained in Brihat Parashara Hora Shastra, Phaladeepika, Jataka Parijata, and Saravali. Provide a rich, detailed, and accurate interpretation of this birth chart. Write warmly, specifically, and in the voice of a compassionate pandit.
+    # Identify weak/afflicted planets for detailed remedies
+    weak = []
+    for p in planets:
+        issues = []
+        if p.get("retrograde"): issues.append("retrograde")
+        if p.get("combust"):    issues.append("combust")
+        if p["name"] == "Sun"    and p["sign_en"] == "Libra":    issues.append("debilitated")
+        if p["name"] == "Moon"   and p["sign_en"] == "Scorpio":  issues.append("debilitated")
+        if p["name"] == "Mars"   and p["sign_en"] == "Cancer":   issues.append("debilitated")
+        if p["name"] == "Mercury"and p["sign_en"] == "Pisces":   issues.append("debilitated")
+        if p["name"] == "Jupiter"and p["sign_en"] == "Capricorn":issues.append("debilitated")
+        if p["name"] == "Venus"  and p["sign_en"] == "Virgo":    issues.append("debilitated")
+        if p["name"] == "Saturn" and p["sign_en"] == "Aries":    issues.append("debilitated")
+        if issues: weak.append(f"{p['name']} ({', '.join(issues)}) in {p['sign_en']} House {p['house']}")
+    weak_lines = "\n".join(f"  {w}" for w in weak) or "  None detected"
 
-══ BIRTH CHART ══
-Lagna: {lagna.get('sign_en')} {lagna.get('degree_in_sign')}° | {lagna.get('nakshatra')} Nakshatra Pada {lagna.get('pada')} | Lord: {lagna.get('lord')}
+    prompt = f"""You are the most learned Vedic Jyotishi alive — a master of Brihat Parashara Hora Shastra, Phaladeepika, Jataka Parijata, Saravali, Uttara Kalamrita, and Mansagari. A devoted seeker has placed their entire birth chart before you. Give them the most complete, profound, and life-changing reading possible. Write with the warmth of a grandfather, the precision of a scholar, and the depth of a sage. Address them directly as "you."
 
-PLANETS (Sidereal · Lahiri · Whole Sign Houses):
+══════════════════════════════════════════
+BIRTH CHART (Sidereal · Lahiri · Whole Sign)
+══════════════════════════════════════════
+LAGNA: {lagna.get('sign_en')} {lagna.get('degree_in_sign'):.2f}° | {lagna.get('nakshatra')} Nakshatra Pada {lagna.get('pada')} | Lord: {lagna.get('lord')}
+
+PLANETS:
 {planet_lines}
 
 HOUSES:
 {house_lines}
 
-YOGAS:
+YOGAS IN THIS CHART:
 {yoga_lines}
 
-CURRENT DASHA: {dasha_line}
-CURRENT ANTARDASHA: {antard_line}
+AFFLICTED / WEAK PLANETS:
+{weak_lines}
 
-Write a complete, detailed reading with bold headers for each section:
+VIMSHOTTARI DASHA TIMELINE:
+{vimsh_lines}
 
-**1. Lagna — The Self & Life Path**
-**2. Planetary Analysis — Graha Phala** (every planet)
-**3. House-by-House Analysis — Bhava Phala** (all 12 houses)
-**4. Yogas & Special Combinations**
-**5. Current Dasha Period — Dasha Phala**
-**6. Deep Classical Remedies — Upaya** (specific mantras with counts, ritual baths, daan, gemstones)
+CURRENT PERIOD: {dasha_line}
+CURRENT SUB-PERIOD: {antard_line}
+══════════════════════════════════════════
 
-~1000 words. Precise, warm, grounded in shastra. No frightening predictions."""
+Write a COMPLETE life reading. Cover every single aspect. Use these exact bold headers:
+
+**1. Lagna & Physical Self — Who You Are**
+The ascendant sign, degree, nakshatra, and pada — what this reveals about the person's body, appearance, personality, instincts, default way of moving through the world, and the overall tone of their entire life.
+
+**2. The Mind & Inner World — Moon Analysis**
+The Moon sign, nakshatra, pada, and house — the emotional nature, what brings peace, what creates anxiety, relationship with mother, mental tendencies, and what this person truly needs to feel safe and nourished.
+
+**3. Soul Purpose & Vitality — Sun Analysis**
+The Sun's placement — the soul's mission, relationship with father and authority, where they naturally shine, self-esteem patterns, and what they are here to master.
+
+**4. Every Planet — Graha Phala (all 9)**
+For EACH planet (Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu) — the exact effects of its placement in sign, house, and nakshatra. What it gives, what it takes, and how it expresses through lived experience.
+
+**5. All 12 Houses — Complete Bhava Phala**
+A dedicated paragraph for every house (1st through 12th) — what the sign, lord placement, and occupying planets reveal about that life area. Be specific and detailed.
+
+**6. Career, Wealth & Life Purpose**
+10th house, 10th lord, planets in 10th, 2nd house (accumulated wealth), 11th house (income and gains), and any career yogas. What professions suit this chart? When will prosperity peak? What should they work toward?
+
+**7. Relationships & Marriage**
+7th house, 7th lord, Venus, Jupiter (for female charts). The nature of the spouse this chart attracts, timing of marriage, quality of the marital bond, and any relationship patterns to be aware of.
+
+**8. Health & Physical Vitality**
+The ascendant lord's strength, 6th house, 8th house, planets afflicting the chart, and what areas of health need attention. What this chart says about longevity and physical constitution.
+
+**9. Children, Creativity & Intelligence**
+5th house and its lord, Jupiter's placement, any indications for children, the level of creative intelligence, ability to learn, and connection to past-life merit (purva punya).
+
+**10. Spirituality, Dharma & Liberation**
+9th house (dharma, guru, past life merits), 12th house (moksha, foreign travel, retreat), Ketu's placement, and the spiritual path most natural to this soul.
+
+**11. Past Life Karma & Soul Contracts — Rahu/Ketu Axis**
+The exact Rahu and Ketu houses and signs — what karma was accumulated in past lives, what lessons and wounds they carry into this birth, what Rahu is pulling them toward as new growth, and the soul contracts embedded in this chart.
+
+**12. Yogas — Special Combinations & Their Fruits**
+Every yoga present in this chart — what each one means concretely, when it will ripen, and how the person can consciously activate it.
+
+**13. Your Past — What the Chart Reveals About Your History**
+Using the dasha timeline already elapsed — what themes, events, and turning points the past planetary periods brought. Connect the chart to the life that has already been lived.
+
+**14. Your Present — What Is Happening Right Now**
+The exact Mahadasha and Antardasha running now — their specific nature, what they are activating in this chart, the key themes of this period, and what the person should focus on or be careful about right now.
+
+**15. Your Future — The Next 20 Years**
+Go through each upcoming Mahadasha period one by one — what each will bring for career, relationships, health, and spiritual growth. Give specific guidance for navigating each period wisely.
+
+**16. What You Must Do — Dharmic Life Guidance**
+Specific, personal do's drawn from this exact chart: the habits, practices, relationships, and choices that will align this person with their highest destiny.
+
+**17. What You Must Avoid — Karmic Warnings**
+Specific don'ts from this chart: patterns, behaviors, types of people, decisions, and environments that will bring suffering and delay this person's growth.
+
+**18. Complete Remedies for Every Weak Planet — Upaya**
+For EVERY afflicted, debilitated, combust, or retrograde planet AND for the chart's most important planets:
+- Sacred mantra (exact Sanskrit, with daily repetition count)
+- Deity to worship and specific prayer
+- Fasting day
+- Gemstone or substitute stone (with metal and weight)
+- Daan (charitable act — specific item, day, time)
+- Colour and direction to favour
+- Specific puja or ritual with timing
+
+**19. Auspicious Guidance — Lucky Colours, Numbers, Days & Directions**
+Lucky number, colour, day of the week, direction to face while working and praying, and the most auspicious time of day for important decisions — all derived from this specific chart.
+
+**20. The Complete Story of This Soul**
+A final synthesis — the overarching narrative of this soul's journey: where they have come from (past lives via Ketu), what they are learning in this life, the single most important thing they must understand about themselves, and the blessing this chart carries.
+
+Write at least 3000 words. Be specific to THIS chart — never generic. Every sentence must connect to the actual planetary positions given. Write as if this is the only reading you will ever give this person and they are trusting you with their entire life."""
 
     async def stream():
         response = await client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role":"user","content":prompt}],
-            stream=True, max_tokens=2500,
+            stream=True, max_tokens=7000,
         )
         async for chunk in response:
             content = chunk.choices[0].delta.content

@@ -697,15 +697,10 @@ export default function Kundali() {
               </div>
             )}
             {interpretation && (
-              <>
-                <div
-                  style={S.aiText}
-                  dangerouslySetInnerHTML={{__html: formatMd(interpretation)}}
-                />
-                <button style={{...S.aiBtn, marginTop:16}} onClick={getInterpretation}>
-                  ↺ Regenerate Reading
-                </button>
-              </>
+              <div
+                style={S.aiText}
+                dangerouslySetInnerHTML={{__html: formatMd(interpretation)}}
+              />
             )}
           </div>
 
