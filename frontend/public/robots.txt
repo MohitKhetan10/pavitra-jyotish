@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pavitra-jyotish.vercel.app/sitemap.xml
+Sitemap: https://pavitrajyotish.vercel.app/sitemap.xml
