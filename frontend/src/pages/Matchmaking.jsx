@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useIsMobile } from "../hooks/useBreakpoint.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -244,6 +245,7 @@ function CircleScore({ score, max, color, verdict }) {
 const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", tz_offset:"" };
 
 export default function Matchmaking() {
+  const isMobile = useIsMobile();
   const [p1, setP1] = useState({ ...empty });
   const [p2, setP2] = useState({ ...empty });
   const [result, setResult] = useState(null);
@@ -390,7 +392,7 @@ export default function Matchmaking() {
 
             {/* ── Extended kootas ── */}
             <InfoSection title="Extended Kootas — Mahendra & Stree-Deergha" icon="📿">
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, flexWrap:"wrap" }}>
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:12 }}>
                 {[
                   { label:"Mahendra Koota", data:r.mahendra,
                     tip:"Shows good fortune, prosperity, and long life of the couple." },
@@ -419,7 +421,7 @@ export default function Matchmaking() {
                   Doshas are challenging astrological combinations. Every dosha has classical remedies.
                   The absence of a dosha is auspicious; the presence requires specific puja and remedies before marriage.
                 </div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:8, marginBottom:8 }}>
                   {[
                     { label:"Rajju Dosha",   present:r.rajju?.dosha,         severity:r.rajju?.severity,       desc:r.rajju?.desc },
                     { label:"Vedha Dosha",   present:r.vedha?.dosha,         severity:"Nakshatra Piercing",    desc:r.vedha?.desc },

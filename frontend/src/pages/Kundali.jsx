@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "../hooks/useBreakpoint.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -372,6 +373,7 @@ function RemedyCard({ pname, pd, expanded, onToggle }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function Kundali() {
+  const isMobile = useIsMobile();
   const [form, setForm] = useState({
     year:"1990", month:"1", day:"15", hour:"10", minute:"30",
     lat:"27.7172", lon:"85.3240", tz_offset: guessTz(),
@@ -455,7 +457,7 @@ export default function Kundali() {
       {/* ── BIRTH FORM ── */}
       <div style={S.card}>
         <h2 style={S.cardTitle}>Enter Birth Details</h2>
-        <div style={S.formGrid}>
+        <div style={{...S.formGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)"}}>
           {[
             ["year","Birth Year","number","1800","2100"],
             ["month","Month (1–12)","number","1","12"],
@@ -491,7 +493,7 @@ export default function Kundali() {
         <div>
 
           {/* ── SUMMARY BANNER ── */}
-          <div style={S.summaryRow}>
+          <div style={{...S.summaryRow, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)"}}>
             {[
               { label:"Lagna · Rising Sign", value:chart.lagna.sign_en,
                 sub:`${chart.lagna.degree_in_sign}° · ${chart.lagna.nakshatra} P${chart.lagna.pada}` },
@@ -537,7 +539,7 @@ export default function Kundali() {
           )}
 
           {/* ── CHART + YOGAS ── */}
-          <div style={S.chartYogaRow}>
+          <div style={{...S.chartYogaRow, gridTemplateColumns: isMobile ? "1fr" : "320px 1fr"}}>
             <div style={S.chartBox}>
               <h2 style={S.secTitle}>Birth Chart (South Indian)</h2>
               <SouthChart chart={chart} />
@@ -569,7 +571,7 @@ export default function Kundali() {
           <div style={S.section}>
             <h2 style={S.secTitle}>Graha — Planetary Positions</h2>
             <p style={S.hint}>Click any planet card to see its full classical interpretation</p>
-            <div style={S.planetGrid}>
+            <div style={{...S.planetGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)"}}>
               {chart.planets.map(p => (
                 <PlanetCard
                   key={p.name}
@@ -586,7 +588,7 @@ export default function Kundali() {
           <div style={S.section}>
             <h2 style={S.secTitle}>Bhava — All 12 Houses</h2>
             <p style={S.hint}>Click any house to see its detailed effects on that area of life</p>
-            <div style={S.houseGrid}>
+            <div style={{...S.houseGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)"}}>
               {chart.houses.map(h => (
                 <HouseCard
                   key={h.house}

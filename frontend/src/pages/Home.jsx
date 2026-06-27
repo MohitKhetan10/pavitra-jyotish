@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint.js";
 
 const FEATURES = [
   {
@@ -29,14 +30,15 @@ const PRINCIPLES = [
 ];
 
 export default function Home() {
+  const isMobile = useIsMobile();
   return (
     <div style={S.page}>
 
       {/* ── HERO ── */}
-      <section style={S.hero}>
+      <section style={{...S.hero, padding: isMobile ? "60px 16px 40px" : "100px 24px 80px"}}>
         <div style={S.heroInner}>
           <div style={S.om}>ॐ</div>
-          <h1 style={S.title}>Pavitra Jyotish</h1>
+          <h1 style={{...S.title, fontSize: isMobile ? 34 : 68, letterSpacing: isMobile ? 1 : 3}}>Pavitra Jyotish</h1>
           <p style={S.tagline}>पवित्र ज्योतिष — Pure Vedic Astrology</p>
           <p style={S.sub}>
             Authentic Vedic birth chart analysis and Kundali matching —
@@ -61,7 +63,10 @@ export default function Home() {
       </div>
 
       {/* ── FEATURES ── */}
-      <section style={S.featureSection}>
+      <section style={{...S.featureSection,
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+        padding: isMobile ? "32px 16px" : "60px 40px",
+      }}>
         {FEATURES.map(f => (
           <div key={f.title} style={S.featureCard}>
             <div style={S.featureIcon}>{f.icon}</div>

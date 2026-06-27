@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "../hooks/useBreakpoint.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 const G = "#c9973a", BG = "#0f0400", TXT = "#fdf0d5", MUTED = "#b89060", CARD = "#1a0900";
@@ -227,13 +228,14 @@ function SectionBlock({ title, text }) {
 }
 
 function NumCard({ num, label }) {
+  const isMobile = useIsMobile();
   const d = NUM_DATA[num]; if (!num||!d) return null;
   return (
     <div style={{...S.card, borderColor:PBORD[num]}}>
-      <div style={S.numHeader}>
-        <div style={{fontSize:72,fontWeight:"bold",color:PCOL[num],fontFamily:"Georgia,serif",minWidth:80,textAlign:"center",lineHeight:1}}>{num}</div>
+      <div style={{...S.numHeader, flexWrap:"wrap"}}>
+        <div style={{fontSize: isMobile ? 52 : 72,fontWeight:"bold",color:PCOL[num],fontFamily:"Georgia,serif",minWidth:60,textAlign:"center",lineHeight:1}}>{num}</div>
         <div>
-          <div style={{color:PBORD[num],fontSize:20,fontFamily:"Georgia,serif"}}>{TITLE[num]}</div>
+          <div style={{color:PBORD[num],fontSize: isMobile ? 17 : 20,fontFamily:"Georgia,serif"}}>{TITLE[num]}</div>
           <div style={{color:MUTED,fontSize:13,marginTop:4}}>{label} · ruled by {PLANET[num]}</div>
         </div>
       </div>
@@ -246,7 +248,7 @@ function NumCard({ num, label }) {
         <InfoBox label="Sacred Mantra"   value={MANTRA[num]} />
       </div>
       <SectionBlock title="Core Personality" text={d.personality} />
-      <div style={S.twoCol}>
+      <div style={{...S.twoCol, gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr"}}>
         <div>
           <div style={S.sLabel}>Strengths</div>
           <ul style={S.ul}>{d.strengths.map((s,i)=><li key={i} style={S.li}>{s}</li>)}</ul>
@@ -321,6 +323,7 @@ function CombinedSection({ moolank, bhagyank, namank, name }) {
 }
 
 function PersonalYearSection({ day, month }) {
+  const isMobile = useIsMobile();
   const currPY = calcPersonalYear(day, month, CURRENT_YEAR);
   const pastPY = calcPersonalYear(day, month, CURRENT_YEAR - 1);
   const nextPY = calcPersonalYear(day, month, CURRENT_YEAR + 1);
@@ -337,9 +340,9 @@ function PersonalYearSection({ day, month }) {
 
       {/* Past year */}
       <div style={{...S.pyCard, borderColor:`${PY[pastPY].color}55`, opacity:0.8}}>
-        <div style={S.pyHeader}>
-          <div style={{...S.pyNum, color:PY[pastPY].color}}>{pastPY}</div>
-          <div>
+        <div style={{...S.pyHeader, flexWrap:"wrap"}}>
+          <div style={{...S.pyNum, color:PY[pastPY].color, fontSize: isMobile ? 36 : 52}}>{pastPY}</div>
+          <div style={{flex:1,minWidth:160}}>
             <div style={{color:PY[pastPY].color,fontSize:13,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Personal Year {CURRENT_YEAR-1} — Completed</div>
             <div style={{color:TXT,fontSize:18,fontFamily:"Georgia,serif"}}>{past.theme}</div>
           </div>
@@ -350,11 +353,11 @@ function PersonalYearSection({ day, month }) {
 
       {/* Current year */}
       <div style={{...S.pyCard, borderColor:curr.color, background:"#2a110022"}}>
-        <div style={S.pyHeader}>
-          <div style={{...S.pyNum, color:curr.color, fontSize:64}}>{currPY}</div>
-          <div>
+        <div style={{...S.pyHeader, flexWrap:"wrap"}}>
+          <div style={{...S.pyNum, color:curr.color, fontSize: isMobile ? 44 : 64}}>{currPY}</div>
+          <div style={{flex:1,minWidth:160}}>
             <div style={{color:curr.color,fontSize:13,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Personal Year {CURRENT_YEAR} — Now</div>
-            <div style={{color:TXT,fontSize:22,fontFamily:"Georgia,serif"}}>{curr.theme}</div>
+            <div style={{color:TXT,fontSize: isMobile ? 18 : 22,fontFamily:"Georgia,serif"}}>{curr.theme}</div>
             <div style={{color:curr.color,fontSize:13,marginTop:4}}>Your keyword this year: {curr.action}</div>
           </div>
         </div>
@@ -363,9 +366,9 @@ function PersonalYearSection({ day, month }) {
 
       {/* Next year */}
       <div style={{...S.pyCard, borderColor:`${PY[nextPY].color}55`}}>
-        <div style={S.pyHeader}>
-          <div style={{...S.pyNum, color:PY[nextPY].color}}>{nextPY}</div>
-          <div>
+        <div style={{...S.pyHeader, flexWrap:"wrap"}}>
+          <div style={{...S.pyNum, color:PY[nextPY].color, fontSize: isMobile ? 36 : 52}}>{nextPY}</div>
+          <div style={{flex:1,minWidth:160}}>
             <div style={{color:PY[nextPY].color,fontSize:13,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Personal Year {CURRENT_YEAR+1} — Approaching</div>
             <div style={{color:TXT,fontSize:18,fontFamily:"Georgia,serif"}}>{next.theme}</div>
           </div>
