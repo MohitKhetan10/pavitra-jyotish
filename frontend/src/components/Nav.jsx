@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 
 const links = [
-  { to:"/",          label:"Home"           },
-  { to:"/kundali",   label:"Birth Chart"    },
-  { to:"/matching",  label:"Kundali Matching" },
+  { to:"/",            label:"Home"             },
+  { to:"/kundali",     label:"Birth Chart"      },
+  { to:"/matching",    label:"Kundali Matching" },
+  { to:"/numerology",  label:"Numerology"       },
 ];
 
 export default function Nav() {
