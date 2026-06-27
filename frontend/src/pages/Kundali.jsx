@@ -4,6 +4,7 @@ import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
 import { useToast }    from "../components/Toast.jsx";
 import { generateKundaliPDF } from "../utils/generatePDF.js";
+import CitySearch from "../components/CitySearch.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -394,10 +395,10 @@ export default function Kundali() {
     if (p.y && p.m && p.d) {
       autoGenRef.current = true;
       return { year:p.y, month:p.m, day:p.d, hour:p.h||"12", minute:p.min||"0",
-               lat:p.lat||"27.7172", lon:p.lon||"85.3240", tz_offset:p.tz||guessTz() };
+               lat:p.lat||"", lon:p.lon||"", tz_offset:p.tz||guessTz(), city:p.city||"" };
     }
     return { year:"1990", month:"1", day:"15", hour:"10", minute:"30",
-             lat:"27.7172", lon:"85.3240", tz_offset: guessTz() };
+             lat:"", lon:"", tz_offset: guessTz(), city:"" };
   });
   const [chart, setChart]     = useState(null);
   const [report, setReport]   = useState(null);
@@ -443,7 +444,7 @@ export default function Kundali() {
     if (p.day<1||p.day>31)        throw new Error("Day must be 1–31");
     if (p.hour<0||p.hour>23)      throw new Error("Hour must be 0–23");
     if (p.minute<0||p.minute>59)  throw new Error("Minute must be 0–59");
-    if (isNaN(p.lat)||isNaN(p.lon)) throw new Error("Enter valid latitude / longitude");
+    if (!p.lat || !p.lon || isNaN(p.lat)||isNaN(p.lon)) throw new Error("Please search and select a birthplace city");
     return p;
   }
 
@@ -454,7 +455,7 @@ export default function Kundali() {
       const p = parseParams(overrideForm);
       setBirthParams(p);
       setSearchParams({ y:p.year, m:p.month, d:p.day, h:p.hour, min:p.minute,
-                        lat:p.lat, lon:p.lon, tz:p.tz_offset }, { replace:true });
+                        lat:p.lat, lon:p.lon, tz:p.tz_offset, city:form.city||"" }, { replace:true });
       const [cr, rr] = await Promise.all([
         fetch(`${API}/chart`,  { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(p) }),
         fetch(`${API}/report`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(p) }),
@@ -499,15 +500,13 @@ export default function Kundali() {
       {/* ── BIRTH FORM ── */}
       <div style={S.card}>
         <h2 style={S.cardTitle}>{t("k.formTitle")}</h2>
-        <div style={{...S.formGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)"}}>
+        <div style={{...S.formGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5,1fr)"}}>
           {[
             ["year",  t("k.year"),   "number","1800","2100"],
             ["month", t("k.month"),  "number","1","12"],
             ["day",   t("k.day"),    "number","1","31"],
             ["hour",  t("k.hour"),   "number","0","23"],
             ["minute",t("k.minute"), "number","0","59"],
-            ["lat",   t("k.lat"),    "text"],
-            ["lon",   t("k.lon"),    "text"],
           ].map(([k,label,type,min,max]) => (
             <label key={k} style={S.field}>
               <span style={S.flabel}>{label}</span>
@@ -515,15 +514,15 @@ export default function Kundali() {
                 value={form[k]} onChange={set(k)} />
             </label>
           ))}
-          <label style={S.field}>
-            <span style={S.flabel}>{t("k.tz")}</span>
-            <select style={S.select} value={form.tz_offset} onChange={set("tz_offset")}>
-              {TIMEZONES.map((z,i) =>
-                <option key={i} value={String(z.offset)}>{z.label}</option>
-              )}
-            </select>
-          </label>
         </div>
+        <label style={{...S.field, marginTop:12}}>
+          <span style={S.flabel}>Birthplace City</span>
+          <CitySearch
+            value={form.city}
+            onSelect={c => setForm(f => ({...f, lat:String(c.lat), lon:String(c.lng), tz_offset:String(c.tz_offset), city:c.display}))}
+            inputStyle={S.input}
+          />
+        </label>
         <button className="btn-shimmer" style={loading ? S.btnOff : S.btn} onClick={() => generate()} disabled={loading}>
           {t("k.btn")}
         </button>

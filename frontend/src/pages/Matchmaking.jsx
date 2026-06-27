@@ -4,6 +4,7 @@ import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
 import { useToast }    from "../components/Toast.jsx";
 import { generateMatchPDF } from "../utils/generateMatchPDF.js";
+import CitySearch from "../components/CitySearch.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -144,13 +145,13 @@ function DetailRow({ label, value, good, warning }) {
 /* ── Birth Form ── */
 function BirthForm({ label, color, values, onChange }) {
   function set(k) { return e => onChange({ ...values, [k]: e.target.value }); }
+  function handleCitySelect(c) {
+    onChange({ ...values, lat:String(c.lat), lon:String(c.lng), tz_offset:String(c.tz_offset), city:c.display });
+  }
 
   const inp = {
     background:"#0f0500", border:`1px solid ${color}33`, borderRadius:7,
     color:TXT, padding:"9px 12px", fontSize:13, width:"100%", boxSizing:"border-box",
-  };
-  const sel = {
-    ...inp, cursor:"pointer",
   };
 
   return (
@@ -179,22 +180,13 @@ function BirthForm({ label, color, values, onChange }) {
         ))}
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
-        {[["Latitude","lat","27.7172"],["Longitude","lon","85.3240"]].map(([lbl,k,ph]) => (
-          <div key={k}>
-            <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{lbl}</div>
-            <input type="number" step="0.0001" placeholder={ph} value={values[k]} onChange={set(k)} style={inp}/>
-          </div>
-        ))}
-      </div>
-
       <div>
-        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>Timezone</div>
-        <select value={values.tz_offset} onChange={set("tz_offset")} style={sel}>
-          {TIMEZONES.map((z, i) => (
-            <option key={i} value={String(z.offset)}>{z.label}</option>
-          ))}
-        </select>
+        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>Birthplace</div>
+        <CitySearch
+          value={values.city}
+          onSelect={handleCitySelect}
+          inputStyle={inp}
+        />
       </div>
     </div>
   );
@@ -224,7 +216,7 @@ function CircleScore({ score, max, color, verdict }) {
 }
 
 /* ── Main page ── */
-const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", tz_offset: guessTz() };
+const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", tz_offset: guessTz(), city:"" };
 
 export default function Matchmaking() {
   const isMobile = useIsMobile();
@@ -234,13 +226,13 @@ export default function Matchmaking() {
   const [p1, setP1] = useState(() => {
     const q = Object.fromEntries(searchParams);
     return q.p1y ? { year:q.p1y, month:q.p1m, day:q.p1d, hour:q.p1h||"12",
-                     minute:q.p1min||"0", lat:q.p1lat||"", lon:q.p1lon||"", tz_offset:q.p1tz||guessTz() }
+                     minute:q.p1min||"0", lat:q.p1lat||"", lon:q.p1lon||"", tz_offset:q.p1tz||guessTz(), city:q.p1city||"" }
                  : { ...empty };
   });
   const [p2, setP2] = useState(() => {
     const q = Object.fromEntries(searchParams);
     return q.p2y ? { year:q.p2y, month:q.p2m, day:q.p2d, hour:q.p2h||"12",
-                     minute:q.p2min||"0", lat:q.p2lat||"", lon:q.p2lon||"", tz_offset:q.p2tz||guessTz() }
+                     minute:q.p2min||"0", lat:q.p2lat||"", lon:q.p2lon||"", tz_offset:q.p2tz||guessTz(), city:q.p2city||"" }
                  : { ...empty };
   });
   const [result, setResult] = useState(null);
@@ -270,9 +262,12 @@ export default function Matchmaking() {
 
   async function handleMatch() {
     setErr(""); setResult(null); setAiText("");
-    const fields = ["year","month","day","hour","minute","lat","lon","tz_offset"];
+    const fields = ["year","month","day","hour","minute"];
     const bad1 = fields.filter(k => p1[k]==="");
     const bad2 = fields.filter(k => p2[k]==="");
+    const noCity1 = !p1.lat || !p1.lon;
+    const noCity2 = !p2.lat || !p2.lon;
+    if (noCity1 || noCity2) { setErr("Please select a birthplace city for both persons."); return; }
     if (bad1.length||bad2.length) { setErr("Please fill all fields for both persons."); return; }
     setLoading(true);
     try {
@@ -289,8 +284,8 @@ export default function Matchmaking() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setResult(data);
-      setSearchParams({ p1y:p1.year,p1m:p1.month,p1d:p1.day,p1h:p1.hour,p1min:p1.minute,p1lat:p1.lat,p1lon:p1.lon,p1tz:p1.tz_offset,
-                        p2y:p2.year,p2m:p2.month,p2d:p2.day,p2h:p2.hour,p2min:p2.minute,p2lat:p2.lat,p2lon:p2.lon,p2tz:p2.tz_offset }, { replace:true });
+      setSearchParams({ p1y:p1.year,p1m:p1.month,p1d:p1.day,p1h:p1.hour,p1min:p1.minute,p1lat:p1.lat,p1lon:p1.lon,p1tz:p1.tz_offset,p1city:p1.city||"",
+                        p2y:p2.year,p2m:p2.month,p2d:p2.day,p2h:p2.hour,p2min:p2.minute,p2lat:p2.lat,p2lon:p2.lon,p2tz:p2.tz_offset,p2city:p2.city||"" }, { replace:true });
       setTimeout(() => document.getElementById("match-results")?.scrollIntoView({ behavior:"smooth" }), 100);
     } catch(e) { setErr(e.message || "Server error"); }
     finally { setLoading(false); }
