@@ -393,73 +393,111 @@ async def numerology_interpret(request: Request):
     month    = data.get("month")
     year     = data.get("year")
 
-    planets = {1:"Sun",2:"Moon",3:"Jupiter",4:"Rahu",5:"Mercury",
+    PLANETS = {1:"Sun",2:"Moon",3:"Jupiter",4:"Rahu",5:"Mercury",
                6:"Venus",7:"Ketu",8:"Saturn",9:"Mars"}
-    titles  = {1:"The Pioneer",2:"The Diplomat",3:"The Creator",4:"The Builder",
+    TITLES  = {1:"The Pioneer",2:"The Diplomat",3:"The Creator",4:"The Builder",
                5:"The Explorer",6:"The Nurturer",7:"The Seeker",
                8:"The Achiever",9:"The Humanitarian"}
+    FRIENDS = {
+        "Sun":["Moon","Mars","Jupiter"],"Moon":["Sun","Mercury"],
+        "Mars":["Sun","Moon","Jupiter"],"Mercury":["Sun","Venus"],
+        "Jupiter":["Sun","Moon","Mars"],"Venus":["Mercury","Saturn","Rahu"],
+        "Saturn":["Mercury","Venus","Rahu"],"Rahu":["Venus","Saturn","Mercury"],
+        "Ketu":["Mars","Venus","Sun"],
+    }
+    ENEMIES = {
+        "Sun":["Venus","Saturn","Rahu"],"Moon":["Rahu","Ketu"],"Mars":["Mercury","Rahu"],
+        "Mercury":["Moon","Ketu"],"Jupiter":["Mercury","Venus","Rahu"],"Venus":["Sun","Moon"],
+        "Saturn":["Sun","Moon","Mars"],"Rahu":["Sun","Moon"],"Ketu":["Mercury","Rahu"],
+    }
 
-    namank_line = f"\nNamank (Name Number): {namank} — {titles.get(namank,'')} — ruled by {planets.get(namank,'')}" if namank else ""
-    name_line   = f"\nName: {name}" if name else ""
+    mp = PLANETS.get(moolank,""); bp = PLANETS.get(bhagyank,""); np = PLANETS.get(namank,"") if namank else ""
+    mt = TITLES.get(moolank,"");  bt = TITLES.get(bhagyank,"")
+    CURRENT_YEAR = 2026
+    def _reduce(n):
+        while n > 9: n = sum(int(d) for d in str(n))
+        return n
+    curr_py = _reduce(day + month + CURRENT_YEAR)
+    past_py = _reduce(day + month + CURRENT_YEAR - 1)
+    next_py = _reduce(day + month + CURRENT_YEAR + 1)
 
-    prompt = f"""You are a master Vedic numerologist — deeply versed in the ancient Ankashastra tradition as taught in Brihat Samhita, and the numerological systems of Pythagoras, Chaldea, and the Vedic rishis. A seeker has placed their birth numbers before you. Give them the most complete, insightful, and life-changing numerology reading possible. Write warmly, precisely, and with the authority of a sage. Address them directly as "you."
+    if mp and bp:
+        if moolank == bhagyank: rel = "same planet — perfect amplification"
+        elif bp in FRIENDS.get(mp,[]): rel = f"planetary friends ({mp} and {bp} support each other)"
+        elif bp in ENEMIES.get(mp,[]): rel = f"planetary enemies ({mp} and {bp} in sacred tension — the most growth-producing combination)"
+        else: rel = f"neutral planets ({mp} and {bp} run parallel tracks requiring conscious bridging)"
+    else: rel = "unknown"
+
+    namank_section = f"""
+**4. The Name Vibration — Namank {namank} ({np})**
+The name "{name}" vibrates at {np}'s frequency (Namank {namank} · {TITLES.get(namank,'')}). Analyze how this name energy interacts with Moolank {moolank} ({mp}) and Bhagyank {bhagyank} ({bp}). Is the name harmonious, challenging, or neutral in relation to the core numbers? Does it amplify or complicate the person's path? Should they consider any adjustment to their name's vibration?""" if namank else """
+**4. The Name Vibration**
+No name was provided for Namank calculation. Explain briefly what the Namank is, how it is calculated using the Chaldean system, and why it matters for this specific Moolank-Bhagyank combination."""
+
+    prompt = f"""You are a master Vedic numerologist — deeply versed in the ancient Ankashastra tradition, the Chaldean system, and the numerological synthesis of all three schools. A seeker has placed their complete numerical blueprint before you. Give the most specific, insightful, and life-changing reading possible. Write as a compassionate sage who has studied these exact numbers for decades. Use specific, concrete language — not "you are creative" but "you feel most alive when you are building something that did not exist before." Address them as "you."
 
 ══════════════════════════════════════
-NUMEROLOGY CHART
+COMPLETE NUMEROLOGICAL BLUEPRINT
 ══════════════════════════════════════
-Date of Birth: {day}/{month}/{year}{name_line}
-Moolank (Birth Number): {moolank} — {titles.get(moolank,'')} — ruled by {planets.get(moolank,'')}
-Bhagyank (Destiny Number): {bhagyank} — {titles.get(bhagyank,'')} — ruled by {planets.get(bhagyank,'')}{namank_line}
+Date of Birth: {day}/{month}/{year}{"  |  Name: " + name if name else ""}
+Moolank  (Birth Number):   {moolank} — {mt} — ruled by {mp}
+Bhagyank (Destiny Number): {bhagyank} — {bt} — ruled by {bp}{(chr(10)+"Namank   (Name Number):    " + str(namank) + " — " + TITLES.get(namank,"") + " — ruled by " + np) if namank else ""}
+
+PLANETARY RELATIONSHIP: {rel}
+
+PERSONAL YEAR CYCLE:
+  {CURRENT_YEAR-1} (Past Year):    Personal Year {past_py}  — can be verified against last year's experience
+  {CURRENT_YEAR}   (Current Year): Personal Year {curr_py}  — active NOW
+  {CURRENT_YEAR+1} (Next Year):    Personal Year {next_py}  — approaching
 ══════════════════════════════════════
 
-Write a COMPLETE numerological life reading. Use these exact bold headers:
+Write a COMPLETE reading. Use these exact bold headers:
 
-**1. The Core Vibration — Who You Are at Birth (Moolank {moolank})**
-What does this Moolank reveal about the person's deepest instinctive nature? How does the ruling planet {planets.get(moolank,'')} shape their personality, physical constitution, and approach to life? What is the gift and the shadow of this number?
+**1. Moolank {moolank} — The Person You Were Born As**
+What does this birth number reveal with pinpoint specificity? How does {mp} shape this person's instincts, physical constitution, and default way of moving through the world? Use concrete, specific language that makes them feel recognized — not described.
 
-**2. The Soul's Chosen Path — Destiny & Life Purpose (Bhagyank {bhagyank})**
-What has this soul come to earth to accomplish? How does {planets.get(bhagyank,'')} shape their life trajectory? Where will they feel the call of destiny most strongly? What karmic themes does this number carry from past lives?
+**2. Bhagyank {bhagyank} — The Direction Your Life Is Designed to Move**
+What karmic purpose did this soul choose? How does {bp} shape the arc of their life? Where will they feel most alive, most on-purpose? What does this number require them to learn or become?
 
-**3. The Dialogue Between Your Numbers**
-How do Moolank {moolank} and Bhagyank {bhagyank} interact? Do they support each other or create inner tension? What does this combination reveal about the central theme of this person's life — the push and pull between who they naturally are and who they are becoming?
+**3. The Living Dialogue Between Your Numbers — {moolank} and {bhagyank}**
+This is the most important section. The relationship between these two numbers ({rel}) is the central dynamic of this person's life. Analyze it deeply and specifically: Does the birth nature support the destiny, or resist it? What does this friction or harmony produce in real life — in choices made, patterns repeated, breakthroughs achieved? What does mastering this combination look like?
+{namank_section}
 
-{"**4. The Name Vibration (Namank " + str(namank) + ")** — How does the name number interact with the Moolank and Bhagyank? Does it amplify, harmonize, or challenge the core numbers? Is the name vibration fortunate for this person? What does " + planets.get(namank,'') + " add to the overall numerological picture?" if namank else "**4. The Power of Name Vibration** — Explain how a person's name number (Namank) works and why it matters, especially in the context of this Moolank and Bhagyank combination."}
+**5. Your Past — What Your Numbers Say About the Life Already Lived**
+Using Moolank {moolank} and Bhagyank {bhagyank} as a lens, describe the themes that almost certainly characterized this person's childhood, adolescence, and early adulthood. What did the formative years feel like? What patterns were set in motion? Be specific to these numbers — not generic.
 
-**5. Your Past — What These Numbers Say About Your History**
-Using the Moolank and Bhagyank as a lens — what themes, patterns, and key turning points has this person likely experienced in childhood, teenage years, and early adulthood? What did the formative years feel like for someone with this numerical blueprint?
+**6. Last Year ({CURRENT_YEAR-1}) — Personal Year {past_py}: Verify This**
+Describe exactly what Personal Year {past_py} brought — what themes, what energy, what types of events tend to occur in this year. Tell them to compare it against what actually happened in {CURRENT_YEAR-1}. The verified past creates trusted future.
 
-**6. Your Present — The Current Phase of Your Number Cycle**
-Every 9 years, a person moves through a complete numerological cycle. Calculate and describe the current Personal Year Number for this person (add day + month + current year, reduce to single digit). What is the theme of this year? What should they focus on, and what should they release?
+**7. This Year ({CURRENT_YEAR}) — Personal Year {curr_py}: What Is Happening Now**
+This is the most time-sensitive section. Personal Year {curr_py} is active right now. What does it mean specifically for someone with Moolank {moolank} and Bhagyank {bhagyank}? What should they be doing, what should they be avoiding, what opportunity is available right now that will not return in this form for nine years?
 
-**7. Your Future — The Next 9-Year Cycle**
-Walk through the upcoming personal years one by one. What does each year in the cycle ahead hold? Give specific guidance for how to navigate each year according to the numerological energies at play.
+**8. Next Year ({CURRENT_YEAR+1}) — Personal Year {next_py}: Prepare Now**
+What is coming? What should this person begin preparing for? How does Personal Year {next_py} interact with their Moolank and Bhagyank specifically?
 
-**8. Career & Wealth — Your Numerological Vocational Path**
-Based on the Moolank and Bhagyank together, what career paths are most aligned with this person's numerical blueprint? When are the peak years for professional achievement and financial growth? What numerological principles should guide their business decisions?
+**9. Career & Financial Life — The Numerological Vocational Blueprint**
+Based on the Moolank-Bhagyank combination specifically, what work makes this person feel most alive? What types of environments drain them? What are the peak years for financial growth? What numerological principles should guide major career decisions?
 
-**9. Love, Relationships & Compatibility**
-What type of partner does this combination seek and attract? Which numbers are most compatible romantically? Which create friction? What is the core pattern this person brings to relationships — and what must they learn about love to find lasting happiness?
+**10. Love, Relationships & Compatibility**
+What does this combination need in a partner to thrive? Which Moolanks are most naturally compatible? Which create productive friction? What is the core pattern this person repeats in relationships — and what must they learn about love that these numbers have been trying to teach them?
 
-**10. Health & Vitality Through Numbers**
-What does the Moolank's ruling planet reveal about physical constitution and health tendencies? What body systems need the most attention? What numerological practices — fasting days, color therapy, mantra — support this person's physical wellbeing?
+**11. Karmic Lessons — What This Soul Came to Resolve**
+What are the deepest karmic themes in this blueprint? What has this soul struggled with across lifetimes that the Moolank {moolank}-Bhagyank {bhagyank} combination is designed to address? What is the spiritual opportunity concealed inside this person's greatest life challenge?
 
-**11. Karmic Lessons & Spiritual Growth**
-What are the deepest karmic lessons embedded in these numbers? What has the soul struggled with across lifetimes that these numbers are here to resolve? What is the spiritual opportunity hidden inside the greatest challenge of this numerical blueprint?
+**12. Complete Remedies for Both Ruling Planets**
+For Moolank {moolank} ({mp}) AND Bhagyank {bhagyank} ({bp}) separately:
+— Sacred mantra (exact Sanskrit, daily repetition count)
+— Presiding deity and specific worship practice (what to offer, which day, which time)
+— Fasting day and what to eat/avoid
+— Gemstone: which stone, which metal, which finger, when to start wearing
+— Daan: specific charitable act (what item, to whom, which day, which time)
+— Lucky number, colour, direction for daily life
+— One specific puja or ritual for activating this number's highest potential
 
-**12. Complete Remedies — Upaya for Both Numbers**
-For BOTH the Moolank and Bhagyank:
-- Sacred mantra (exact Sanskrit, with daily count)
-- Presiding deity and specific worship practice
-- Auspicious fasting day and what to offer
-- Gemstone (with metal, finger to wear on, and when to start wearing)
-- Daan (specific charitable act — day, item, recipient)
-- Lucky colour to wear, direction to face, and number to use in daily life
-- Specific ritual or puja with timing
+**13. The Story of This Soul — Final Synthesis**
+Not a summary. A narrative. What is the overarching arc of this life as told by these numbers? What is the single most important truth about themselves that a person with Moolank {moolank} and Bhagyank {bhagyank} most needs to hear — the thing that, if they truly understood it, would change how they live? End with a specific blessing tied to their numerical blueprint.
 
-**13. The Complete Story of This Soul**
-A final synthesis — what is the single overarching narrative of this person's life as told by their numbers? What is the one truth about themselves they most need to understand? What is the unique blessing that only someone with this exact Moolank-Bhagyank combination carries into the world?
-
-Write at least 2000 words. Be specific to THESE exact numbers — never generic. Every paragraph must reference the actual numbers given. Write as if this is the most important reading you will ever give."""
+Write at minimum 2500 words. Every sentence must be specific to these exact numbers. Use concrete language throughout. This reading should feel like it could not have been written for anyone else."""
 
     async def stream():
         response = await client.chat.completions.create(
