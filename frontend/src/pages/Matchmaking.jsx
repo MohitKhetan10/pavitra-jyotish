@@ -6,47 +6,39 @@ import { useToast }    from "../components/Toast.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
+/* ── timezones ── */
+const TIMEZONES = [
+  { label:"Nepal (UTC+5:45)",            offset:5.75  },
+  { label:"India / Sri Lanka (UTC+5:30)",offset:5.5   },
+  { label:"Pakistan (UTC+5:00)",          offset:5.0   },
+  { label:"Bangladesh (UTC+6:00)",        offset:6.0   },
+  { label:"Myanmar (UTC+6:30)",           offset:6.5   },
+  { label:"Thailand (UTC+7:00)",          offset:7.0   },
+  { label:"China / Singapore (UTC+8)",    offset:8.0   },
+  { label:"Japan / Korea (UTC+9)",        offset:9.0   },
+  { label:"UAE / Oman (UTC+4)",           offset:4.0   },
+  { label:"Saudi Arabia (UTC+3)",         offset:3.0   },
+  { label:"East Africa (UTC+3)",          offset:3.0   },
+  { label:"UK / UTC (UTC+0)",             offset:0.0   },
+  { label:"Western Europe (UTC+1)",       offset:1.0   },
+  { label:"Eastern Europe (UTC+2)",       offset:2.0   },
+  { label:"US Eastern (UTC-5)",           offset:-5.0  },
+  { label:"US Central (UTC-6)",           offset:-6.0  },
+  { label:"US Mountain (UTC-7)",          offset:-7.0  },
+  { label:"US Pacific (UTC-8)",           offset:-8.0  },
+  { label:"Australia East (UTC+10)",      offset:10.0  },
+  { label:"New Zealand (UTC+12)",         offset:12.0  },
+];
+
+function guessTz() {
+  const off = -(new Date().getTimezoneOffset() / 60);
+  return String(TIMEZONES.find(z => z.offset === off)?.offset ?? off);
+}
+
 /* ── palette ── */
 const DEEP="#0a0300", G="#c9973a", GSFT="#f0d080", TXT="#fdf0d5", MUTED="#b89060";
 const P1C="#7777dd", P2C="#dd7799";
 const CARD="#150900", BORDER=`${G}33`;
-
-/* ── city-to-coordinates helper ── */
-const CITIES = {
-  "kathmandu":   { lat:27.7172, lon:85.3240 },
-  "pokhara":     { lat:28.2096, lon:83.9856 },
-  "lalitpur":    { lat:27.6644, lon:85.3188 },
-  "bhaktapur":   { lat:27.6710, lon:85.4298 },
-  "biratnagar":  { lat:26.4525, lon:87.2718 },
-  "janakpur":    { lat:26.7288, lon:85.9240 },
-  "birgunj":     { lat:27.0104, lon:84.8777 },
-  "dharan":      { lat:26.8120, lon:87.2832 },
-  "butwal":      { lat:27.7006, lon:83.4532 },
-  "hetauda":     { lat:27.4288, lon:85.0319 },
-  "delhi":       { lat:28.6139, lon:77.2090 },
-  "mumbai":      { lat:19.0760, lon:72.8777 },
-  "kolkata":     { lat:22.5726, lon:88.3639 },
-  "bangalore":   { lat:12.9716, lon:77.5946 },
-  "chennai":     { lat:13.0827, lon:80.2707 },
-  "hyderabad":   { lat:17.3850, lon:78.4867 },
-  "pune":        { lat:18.5204, lon:73.8567 },
-  "ahmedabad":   { lat:23.0225, lon:72.5714 },
-  "jaipur":      { lat:26.9124, lon:75.7873 },
-  "lucknow":     { lat:26.8467, lon:80.9462 },
-  "varanasi":    { lat:25.3176, lon:82.9739 },
-  "london":      { lat:51.5074, lon:-0.1278 },
-  "new york":    { lat:40.7128, lon:-74.0060 },
-  "los angeles": { lat:34.0522, lon:-118.2437 },
-  "dubai":       { lat:25.2048, lon:55.2708 },
-  "singapore":   { lat:1.3521,  lon:103.8198 },
-  "sydney":      { lat:-33.8688,lon:151.2093 },
-  "toronto":     { lat:43.6532, lon:-79.3832 },
-};
-
-function lookupCity(str) {
-  const key = str.trim().toLowerCase();
-  return CITIES[key] || null;
-}
 
 /* ── Sub-components ── */
 function ScoreBar({ score, max }) {
@@ -148,25 +140,15 @@ function DetailRow({ label, value, good, warning }) {
 }
 
 /* ── Birth Form ── */
-function BirthForm({ label, color, values, onChange, cityLabel="City (quick fill)" }) {
-  const [cityInput, setCityInput] = useState("");
-  const [cityMsg,   setCityMsg]   = useState("");
-
+function BirthForm({ label, color, values, onChange }) {
   function set(k) { return e => onChange({ ...values, [k]: e.target.value }); }
-
-  function applyCity() {
-    const coords = lookupCity(cityInput);
-    if (coords) {
-      onChange({ ...values, lat: coords.lat, lon: coords.lon });
-      setCityMsg("✓ " + cityInput.trim());
-    } else {
-      setCityMsg("City not found — enter lat/lon manually");
-    }
-  }
 
   const inp = {
     background:"#0f0500", border:`1px solid ${color}33`, borderRadius:7,
     color:TXT, padding:"9px 12px", fontSize:13, width:"100%", boxSizing:"border-box",
+  };
+  const sel = {
+    ...inp, cursor:"pointer",
   };
 
   return (
@@ -195,30 +177,22 @@ function BirthForm({ label, color, values, onChange, cityLabel="City (quick fill
         ))}
       </div>
 
-      <div style={{ marginBottom:10 }}>
-        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{cityLabel}</div>
-        <div style={{ display:"flex", gap:6 }}>
-          <input placeholder="e.g. Kathmandu" value={cityInput}
-                 onChange={e => setCityInput(e.target.value)}
-                 onKeyDown={e => e.key==="Enter" && applyCity()}
-                 style={{ ...inp, flex:1 }} />
-          <button onClick={applyCity}
-                  style={{ padding:"9px 14px", background:`${color}33`, border:`1px solid ${color}55`,
-                           borderRadius:7, color:color, fontSize:12, cursor:"pointer", whiteSpace:"nowrap" }}>Fill</button>
-        </div>
-        {cityMsg && <div style={{ color: cityMsg.startsWith("✓") ? "#44cc88" : "#cc4444",
-                                   fontSize:11, marginTop:4 }}>{cityMsg}</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+        {[["Latitude","lat","27.7172"],["Longitude","lon","85.3240"]].map(([lbl,k,ph]) => (
+          <div key={k}>
+            <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{lbl}</div>
+            <input type="number" step="0.0001" placeholder={ph} value={values[k]} onChange={set(k)} style={inp}/>
+          </div>
+        ))}
       </div>
 
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-        {[["Latitude","lat","27.7172"],["Longitude","lon","85.3240"],["Timezone","tz_offset","+5.75"]].map(
-          ([lbl,k,ph]) => (
-            <div key={k}>
-              <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{lbl}</div>
-              <input type="number" step="0.01" placeholder={ph} value={values[k]} onChange={set(k)} style={inp}/>
-            </div>
-          )
-        )}
+      <div>
+        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>Timezone</div>
+        <select value={values.tz_offset} onChange={set("tz_offset")} style={sel}>
+          {TIMEZONES.map((z, i) => (
+            <option key={i} value={String(z.offset)}>{z.label}</option>
+          ))}
+        </select>
       </div>
     </div>
   );
@@ -248,7 +222,7 @@ function CircleScore({ score, max, color, verdict }) {
 }
 
 /* ── Main page ── */
-const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", tz_offset:"" };
+const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", tz_offset: guessTz() };
 
 export default function Matchmaking() {
   const isMobile = useIsMobile();
@@ -258,13 +232,13 @@ export default function Matchmaking() {
   const [p1, setP1] = useState(() => {
     const q = Object.fromEntries(searchParams);
     return q.p1y ? { year:q.p1y, month:q.p1m, day:q.p1d, hour:q.p1h||"12",
-                     minute:q.p1min||"0", lat:q.p1lat||"", lon:q.p1lon||"", tz_offset:q.p1tz||"" }
+                     minute:q.p1min||"0", lat:q.p1lat||"", lon:q.p1lon||"", tz_offset:q.p1tz||guessTz() }
                  : { ...empty };
   });
   const [p2, setP2] = useState(() => {
     const q = Object.fromEntries(searchParams);
     return q.p2y ? { year:q.p2y, month:q.p2m, day:q.p2d, hour:q.p2h||"12",
-                     minute:q.p2min||"0", lat:q.p2lat||"", lon:q.p2lon||"", tz_offset:q.p2tz||"" }
+                     minute:q.p2min||"0", lat:q.p2lat||"", lon:q.p2lon||"", tz_offset:q.p2tz||guessTz() }
                  : { ...empty };
   });
   const [result, setResult] = useState(null);
@@ -345,8 +319,8 @@ export default function Matchmaking() {
 
         {/* ── Forms ── */}
         <div style={{ display:"flex", gap:16, marginBottom:20, flexWrap:"wrap" }}>
-          <BirthForm label={t("m.person1")} color={P1C} values={p1} onChange={setP1} cityLabel={t("m.city")}/>
-          <BirthForm label={t("m.person2")} color={P2C} values={p2} onChange={setP2} cityLabel={t("m.city")}/>
+          <BirthForm label={t("m.person1")} color={P1C} values={p1} onChange={setP1}/>
+          <BirthForm label={t("m.person2")} color={P2C} values={p2} onChange={setP2}/>
         </div>
 
         {err && <div style={{ background:"#2a0000", border:"1px solid #cc4444", borderRadius:8,
