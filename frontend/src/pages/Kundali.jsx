@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
+import { useLang }     from "../context/LangContext.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -374,9 +376,19 @@ function RemedyCard({ pname, pd, expanded, onToggle }) {
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function Kundali() {
   const isMobile = useIsMobile();
-  const [form, setForm] = useState({
-    year:"1990", month:"1", day:"15", hour:"10", minute:"30",
-    lat:"27.7172", lon:"85.3240", tz_offset: guessTz(),
+  const { t }    = useLang();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoGenRef = useRef(false);
+
+  const [form, setForm] = useState(() => {
+    const p = Object.fromEntries(searchParams);
+    if (p.y && p.m && p.d) {
+      autoGenRef.current = true;
+      return { year:p.y, month:p.m, day:p.d, hour:p.h||"12", minute:p.min||"0",
+               lat:p.lat||"27.7172", lon:p.lon||"85.3240", tz_offset:p.tz||guessTz() };
+    }
+    return { year:"1990", month:"1", day:"15", hour:"10", minute:"30",
+             lat:"27.7172", lon:"85.3240", tz_offset: guessTz() };
   });
   const [chart, setChart]     = useState(null);
   const [report, setReport]   = useState(null);
@@ -388,15 +400,26 @@ export default function Kundali() {
   const [interpretation, setInterp] = useState("");
   const [interpreting, setInterping] = useState(false);
   const [birthParams, setBirthParams] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const set = k => e => setForm({ ...form, [k]: e.target.value });
 
-  function parseParams() {
+  useEffect(() => {
+    if (autoGenRef.current) { autoGenRef.current = false; generate(form); }
+  }, []);
+
+  function handleShare() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function parseParams(f = form) {
     const p = {
-      year:parseInt(form.year), month:parseInt(form.month), day:parseInt(form.day),
-      hour:parseInt(form.hour), minute:parseInt(form.minute),
-      lat:parseFloat(form.lat), lon:parseFloat(form.lon),
-      tz_offset:parseFloat(form.tz_offset),
+      year:parseInt(f.year), month:parseInt(f.month), day:parseInt(f.day),
+      hour:parseInt(f.hour), minute:parseInt(f.minute),
+      lat:parseFloat(f.lat), lon:parseFloat(f.lon),
+      tz_offset:parseFloat(f.tz_offset),
     };
     if (p.year<1800||p.year>2100) throw new Error("Year must be 1800–2100");
     if (p.month<1||p.month>12)    throw new Error("Month must be 1–12");
@@ -407,12 +430,14 @@ export default function Kundali() {
     return p;
   }
 
-  async function generate() {
+  async function generate(overrideForm) {
     setLoading(true); setError(""); setChart(null); setReport(null);
     setInterp(""); setExpandedPlanet(null); setExpandedHouse(null); setExpandedRemedy(null);
     try {
-      const p = parseParams();
+      const p = parseParams(overrideForm);
       setBirthParams(p);
+      setSearchParams({ y:p.year, m:p.month, d:p.day, h:p.hour, min:p.minute,
+                        lat:p.lat, lon:p.lon, tz:p.tz_offset }, { replace:true });
       const [cr, rr] = await Promise.all([
         fetch(`${API}/chart`,  { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(p) }),
         fetch(`${API}/report`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(p) }),
@@ -450,22 +475,22 @@ export default function Kundali() {
       {/* ── HEADER ── */}
       <header style={S.header}>
         <div style={S.om}>ॐ</div>
-        <h1 style={S.title}>Janma Kundali</h1>
-        <p style={S.subtitle}>Vedic Birth Chart · Sidereal · Lahiri Ayanamsa · Deep Classical Analysis</p>
+        <h1 style={S.title}>{t("k.title")}</h1>
+        <p style={S.subtitle}>{t("k.subtitle")}</p>
       </header>
 
       {/* ── BIRTH FORM ── */}
       <div style={S.card}>
-        <h2 style={S.cardTitle}>Enter Birth Details</h2>
+        <h2 style={S.cardTitle}>{t("k.formTitle")}</h2>
         <div style={{...S.formGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)"}}>
           {[
-            ["year","Birth Year","number","1800","2100"],
-            ["month","Month (1–12)","number","1","12"],
-            ["day","Day (1–31)","number","1","31"],
-            ["hour","Hour (0–23)","number","0","23"],
-            ["minute","Minute (0–59)","number","0","59"],
-            ["lat","Latitude","text"],
-            ["lon","Longitude","text"],
+            ["year",  t("k.year"),   "number","1800","2100"],
+            ["month", t("k.month"),  "number","1","12"],
+            ["day",   t("k.day"),    "number","1","31"],
+            ["hour",  t("k.hour"),   "number","0","23"],
+            ["minute",t("k.minute"), "number","0","59"],
+            ["lat",   t("k.lat"),    "text"],
+            ["lon",   t("k.lon"),    "text"],
           ].map(([k,label,type,min,max]) => (
             <label key={k} style={S.field}>
               <span style={S.flabel}>{label}</span>
@@ -474,7 +499,7 @@ export default function Kundali() {
             </label>
           ))}
           <label style={S.field}>
-            <span style={S.flabel}>Birth Timezone</span>
+            <span style={S.flabel}>{t("k.tz")}</span>
             <select style={S.select} value={form.tz_offset} onChange={set("tz_offset")}>
               {TIMEZONES.map((z,i) =>
                 <option key={i} value={String(z.offset)}>{z.label}</option>
@@ -482,8 +507,8 @@ export default function Kundali() {
             </select>
           </label>
         </div>
-        <button style={loading ? S.btnOff : S.btn} onClick={generate} disabled={loading}>
-          {loading ? "⟳  Computing planetary positions…" : "✦  Reveal My Kundali"}
+        <button style={loading ? S.btnOff : S.btn} onClick={() => generate()} disabled={loading}>
+          {loading ? t("k.generating") : t("k.btn")}
         </button>
         {error && <p style={S.err}>⚠ {error}</p>}
       </div>
@@ -682,6 +707,13 @@ export default function Kundali() {
             ))}
           </div>
 
+          {/* ── SHARE ── */}
+          <div style={{textAlign:"center", margin:"8px 0 4px"}}>
+            <button style={S.shareBtn} onClick={handleShare}>
+              {copied ? t("k.shareDone") : t("k.shareBtn")}
+            </button>
+          </div>
+
           {/* ── PANDIT READING ── */}
           <div style={S.section}>
             <h2 style={S.secTitle}>Pandit's Vachana — Classical Reading</h2>
@@ -690,7 +722,7 @@ export default function Kundali() {
             </p>
             {!interpretation && !interpreting && (
               <button style={S.aiBtn} onClick={getInterpretation}>
-                ✦ Generate Complete Pandit's Reading
+                {t("k.readingBtn")}
               </button>
             )}
             {interpreting && (
@@ -817,6 +849,9 @@ const S = {
                fontFamily:"system-ui,sans-serif" },
 
   // AI section
+  shareBtn:{ padding:"8px 20px", background:"transparent", border:`1px solid ${G}44`,
+             borderRadius:8, color:MUTED, fontSize:13, cursor:"pointer",
+             fontFamily:"system-ui,sans-serif", letterSpacing:0.5 },
   aiBtn: { padding:"13px 28px",
            background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
            border:`1px solid ${G}`, borderRadius:10, color:GSFT, fontSize:16,

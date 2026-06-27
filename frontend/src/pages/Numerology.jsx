@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
+import { useLang }     from "../context/LangContext.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 const G = "#c9973a", BG = "#0f0400", TXT = "#fdf0d5", MUTED = "#b89060", CARD = "#1a0900";
@@ -383,11 +385,40 @@ function PersonalYearSection({ day, month }) {
 // ── Main Page ───────────────────────────────────────────────────────────────
 
 export default function Numerology() {
-  const [form, setForm]       = useState({name:"",day:"",month:"",year:""});
+  const { t }    = useLang();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [form, setForm] = useState(() => {
+    const q = Object.fromEntries(searchParams);
+    return q.d && q.m && q.y
+      ? { name: q.name||"", day:q.d, month:q.m, year:q.y }
+      : { name:"", day:"", month:"", year:"" };
+  });
   const [result, setResult]   = useState(null);
   const [reading, setReading] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [copied, setCopied]   = useState(false);
+
+  useEffect(() => {
+    const q = Object.fromEntries(searchParams);
+    if (q.d && q.m && q.y) {
+      const day = parseInt(q.d), month = parseInt(q.m), year = parseInt(q.y);
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        const name     = q.name || "";
+        const moolank  = calcMoolank(day);
+        const bhagyank = calcBhagyank(day, month, year);
+        const namank   = name ? calcNamank(name) : null;
+        const currPY   = calcPersonalYear(day, month, CURRENT_YEAR);
+        setResult({ moolank, bhagyank, namank, currPY, day, month, year, name });
+      }
+    }
+  }, []);
+
+  function handleShare() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   function set(k,v) { setForm(f=>({...f,[k]:v})); setFormError(""); }
 
@@ -404,8 +435,10 @@ export default function Numerology() {
       const bhagyank = calcBhagyank(day, month, year);
       const namank   = form.name.trim() ? calcNamank(form.name.trim()) : null;
       const currPY   = calcPersonalYear(day, month, CURRENT_YEAR);
-      setResult({ moolank, bhagyank, namank, currPY, day, month, year, name: form.name.trim() });
+      const name = form.name.trim();
+      setResult({ moolank, bhagyank, namank, currPY, day, month, year, name });
       setReading("");
+      setSearchParams({ d:day, m:month, y:year, ...(name ? {name} : {}) }, { replace:true });
     } catch(e) {
       setFormError("Something went wrong. Please check your inputs and try again.");
     }
@@ -430,7 +463,7 @@ export default function Numerology() {
     <div style={S.page}>
       <div style={S.hero}>
         <div style={S.heroSym}>अंक</div>
-        <h1 style={S.heroTitle}>Vedic Numerology</h1>
+        <h1 style={S.heroTitle}>{t("n.title")}</h1>
         <p style={S.heroSub}>Moolank · Bhagyank · Namank — and how they speak to each other</p>
       </div>
 
@@ -441,20 +474,27 @@ export default function Numerology() {
           <div style={{fontSize:18,color:G,fontFamily:"Georgia,serif",marginBottom:20}}>Your Details</div>
           <div style={S.row}>
             <div style={S.fg}>
-              <label style={S.lbl}>Full Name <span style={{color:G,fontSize:11}}>(for Namank · Chaldean)</span></label>
+              <label style={S.lbl}>{t("n.name")} <span style={{color:G,fontSize:11}}>(for Namank · Chaldean)</span></label>
               <input style={S.inp} placeholder="Enter your full name" value={form.name} onChange={e=>set("name",e.target.value)} />
             </div>
           </div>
           <div style={S.row}>
-            <div style={S.fg}><label style={S.lbl}>Day</label><input style={S.inp} type="number" placeholder="DD" min="1" max="31" value={form.day} onChange={e=>set("day",e.target.value)} /></div>
-            <div style={S.fg}><label style={S.lbl}>Month</label><input style={S.inp} type="number" placeholder="MM" min="1" max="12" value={form.month} onChange={e=>set("month",e.target.value)} /></div>
-            <div style={S.fg}><label style={S.lbl}>Year</label><input style={S.inp} type="number" placeholder="YYYY" value={form.year} onChange={e=>set("year",e.target.value)} /></div>
+            <div style={S.fg}><label style={S.lbl}>{t("n.day")}</label><input style={S.inp} type="number" placeholder="DD" min="1" max="31" value={form.day} onChange={e=>set("day",e.target.value)} /></div>
+            <div style={S.fg}><label style={S.lbl}>{t("n.month")}</label><input style={S.inp} type="number" placeholder="MM" min="1" max="12" value={form.month} onChange={e=>set("month",e.target.value)} /></div>
+            <div style={S.fg}><label style={S.lbl}>{t("n.year")}</label><input style={S.inp} type="number" placeholder="YYYY" value={form.year} onChange={e=>set("year",e.target.value)} /></div>
           </div>
-          <button style={S.btn} onClick={calculate}>✦ Calculate My Numbers</button>
+          <button style={S.btn} onClick={calculate}>{t("n.btn")}</button>
           {formError && <div style={{color:"#ff6655",fontSize:14,marginTop:12}}>{formError}</div>}
         </div>
 
         {result && !formError && (<>
+
+          {/* Share */}
+          <div style={{textAlign:"center",marginBottom:8}}>
+            <button style={S.shareBtn} onClick={handleShare}>
+              {copied ? t("n.shareDone") : t("n.shareBtn")}
+            </button>
+          </div>
 
           {/* Badge row */}
           <div style={S.badgeRow}>
@@ -511,7 +551,7 @@ export default function Numerology() {
             </div>
             {!reading && (
               <button style={S.aiBtn} onClick={getReading} disabled={aiLoading}>
-                {aiLoading ? "Generating…" : "✦ Generate Complete Reading"}
+                {aiLoading ? "Generating…" : t("n.readingBtn")}
               </button>
             )}
             {aiLoading && !reading && <div style={{color:MUTED,fontStyle:"italic",marginTop:16}}>Consulting the numbers…</div>}
@@ -552,6 +592,7 @@ const S = {
   pyHeader:   {display:"flex",alignItems:"flex-start",gap:20,marginBottom:14,flexWrap:"wrap"},
   pyNum:      {fontSize:52,fontWeight:"bold",fontFamily:"Georgia,serif",lineHeight:1,minWidth:60,textAlign:"center"},
   pyTag:      {marginLeft:"auto",padding:"4px 12px",borderRadius:20,fontSize:12,fontWeight:"bold",whiteSpace:"nowrap"},
+  shareBtn:   {background:"transparent",border:`1px solid ${G}44`,color:MUTED,borderRadius:8,padding:"8px 20px",fontSize:13,cursor:"pointer",fontFamily:"system-ui,sans-serif"},
   aiBtn:      {background:"transparent",border:`1px solid ${G}`,color:G,borderRadius:8,padding:"12px 26px",fontSize:14,cursor:"pointer",letterSpacing:1},
   aiText:     {color:TXT,fontSize:15,lineHeight:1.9},
 };

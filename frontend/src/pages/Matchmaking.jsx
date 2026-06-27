@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
+import { useLang }     from "../context/LangContext.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -143,7 +145,7 @@ function DetailRow({ label, value, good, warning }) {
 }
 
 /* ── Birth Form ── */
-function BirthForm({ label, color, values, onChange }) {
+function BirthForm({ label, color, values, onChange, cityLabel="City (quick fill)" }) {
   const [cityInput, setCityInput] = useState("");
   const [cityMsg,   setCityMsg]   = useState("");
 
@@ -191,7 +193,7 @@ function BirthForm({ label, color, values, onChange }) {
       </div>
 
       <div style={{ marginBottom:10 }}>
-        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>City (quick fill)</div>
+        <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{cityLabel}</div>
         <div style={{ display:"flex", gap:6 }}>
           <input placeholder="e.g. Kathmandu" value={cityInput}
                  onChange={e => setCityInput(e.target.value)}
@@ -246,14 +248,33 @@ const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", t
 
 export default function Matchmaking() {
   const isMobile = useIsMobile();
-  const [p1, setP1] = useState({ ...empty });
-  const [p2, setP2] = useState({ ...empty });
+  const { t }    = useLang();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [p1, setP1] = useState(() => {
+    const q = Object.fromEntries(searchParams);
+    return q.p1y ? { year:q.p1y, month:q.p1m, day:q.p1d, hour:q.p1h||"12",
+                     minute:q.p1min||"0", lat:q.p1lat||"", lon:q.p1lon||"", tz_offset:q.p1tz||"" }
+                 : { ...empty };
+  });
+  const [p2, setP2] = useState(() => {
+    const q = Object.fromEntries(searchParams);
+    return q.p2y ? { year:q.p2y, month:q.p2m, day:q.p2d, hour:q.p2h||"12",
+                     minute:q.p2min||"0", lat:q.p2lat||"", lon:q.p2lon||"", tz_offset:q.p2tz||"" }
+                 : { ...empty };
+  });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const aiRef = useRef(null);
+
+  function handleShare() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   function toNum(v, fallback=0) { const n=parseFloat(v); return isNaN(n)?fallback:n; }
 
@@ -278,6 +299,8 @@ export default function Matchmaking() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setResult(data);
+      setSearchParams({ p1y:p1.year,p1m:p1.month,p1d:p1.day,p1h:p1.hour,p1min:p1.minute,p1lat:p1.lat,p1lon:p1.lon,p1tz:p1.tz_offset,
+                        p2y:p2.year,p2m:p2.month,p2d:p2.day,p2h:p2.hour,p2min:p2.minute,p2lat:p2.lat,p2lon:p2.lon,p2tz:p2.tz_offset }, { replace:true });
       setTimeout(() => document.getElementById("match-results")?.scrollIntoView({ behavior:"smooth" }), 100);
     } catch(e) { setErr(e.message || "Server error"); }
     finally { setLoading(false); }
@@ -310,7 +333,7 @@ export default function Matchmaking() {
         <div style={{ textAlign:"center", marginBottom:40 }}>
           <div style={{ fontSize:40, color:G }}>ॐ</div>
           <h1 style={{ fontSize:36, fontWeight:"bold", color:GSFT, margin:"8px 0 6px",
-                       fontFamily:"Georgia,serif" }}>Kundali Matching</h1>
+                       fontFamily:"Georgia,serif" }}>{t("m.title")}</h1>
           <p style={{ color:MUTED, fontSize:13, fontFamily:"system-ui,sans-serif", maxWidth:620, margin:"0 auto" }}>
             The most comprehensive Hindu compatibility analysis — Ashtakoot · Rajju · Vedha ·
             Mahendra · Stree-Deergha · 7th House · Venus · Darakaraka · Lagna · Dasha · Karma
@@ -319,8 +342,8 @@ export default function Matchmaking() {
 
         {/* ── Forms ── */}
         <div style={{ display:"flex", gap:16, marginBottom:20, flexWrap:"wrap" }}>
-          <BirthForm label="Person 1" color={P1C} values={p1} onChange={setP1}/>
-          <BirthForm label="Person 2" color={P2C} values={p2} onChange={setP2}/>
+          <BirthForm label={t("m.person1")} color={P1C} values={p1} onChange={setP1} cityLabel={t("m.city")}/>
+          <BirthForm label={t("m.person2")} color={P2C} values={p2} onChange={setP2} cityLabel={t("m.city")}/>
         </div>
 
         {err && <div style={{ background:"#2a0000", border:"1px solid #cc4444", borderRadius:8,
@@ -331,12 +354,20 @@ export default function Matchmaking() {
                           border:`1px solid ${G}`, borderRadius:12, color:GSFT, fontSize:16,
                           fontWeight:"bold", cursor:"pointer", letterSpacing:2, marginBottom:32,
                           opacity: loading ? 0.7 : 1 }}>
-          {loading ? "Computing comprehensive compatibility…" : "✦ Calculate Full Kundali Compatibility ✦"}
+          {loading ? t("m.calculating") : t("m.btn")}
         </button>
 
         {/* ══ RESULTS ══ */}
         {r && (
           <div id="match-results">
+            <div style={{ textAlign:"center", marginBottom:16 }}>
+              <button onClick={handleShare}
+                style={{ padding:"8px 20px", background:"transparent", border:`1px solid ${G}44`,
+                         borderRadius:8, color:MUTED, fontSize:13, cursor:"pointer",
+                         fontFamily:"system-ui,sans-serif" }}>
+                {copied ? t("m.shareDone") : t("m.shareBtn")}
+              </button>
+            </div>
 
             {/* ── Score banner ── */}
             <div style={{ background:CARD, border:`1px solid ${G}55`, borderRadius:20,

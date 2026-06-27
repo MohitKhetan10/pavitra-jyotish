@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
+import { useLang }     from "../context/LangContext.jsx";
 
 const FEATURES = [
   {
@@ -8,7 +9,7 @@ const FEATURES = [
     subtitle:"Janma Kundali",
     desc:"Your complete Vedic birth chart — all planetary positions, all 12 houses, yogas, Vimshottari dasha timeline, and classical remedies. Sidereal · Lahiri Ayanamsa · Whole Sign.",
     link:"/kundali",
-    cta:"Get My Chart →",
+    cta:"Get My Chart →", ctaKey:"home.chartCta",
     points:["All 9 planets + Lagna", "Active Mahadasha & Antardasha", "Yogas present in your chart", "Classical remedies for every planet", "Deep Vedic Pandit reading"],
   },
   {
@@ -17,7 +18,7 @@ const FEATURES = [
     subtitle:"Ashtakoot Milan",
     desc:"Traditional 8-fold Vedic compatibility analysis. Enter both birth details and receive a complete Ashtakoot report with dosha analysis and a detailed AI compatibility reading.",
     link:"/matching",
-    cta:"Check Compatibility →",
+    cta:"Check Compatibility →", ctaKey:"home.matchCta",
     points:["Full Ashtakoot (36 points)", "All 8 kootas scored", "Mangal, Nadi & Bhakoot Dosha", "Moon sign compatibility", "Vedic Pandit compatibility reading"],
   },
 ];
@@ -31,6 +32,7 @@ const PRINCIPLES = [
 
 export default function Home() {
   const isMobile = useIsMobile();
+  const { t } = useLang();
   return (
     <div style={S.page}>
 
@@ -39,14 +41,11 @@ export default function Home() {
         <div style={S.heroInner}>
           <div style={S.om}>ॐ</div>
           <h1 style={{...S.title, fontSize: isMobile ? 34 : 68, letterSpacing: isMobile ? 1 : 3}}>Pavitra Jyotish</h1>
-          <p style={S.tagline}>पवित्र ज्योतिष — Pure Vedic Astrology</p>
-          <p style={S.sub}>
-            Authentic Vedic birth chart analysis and Kundali matching —
-            classical, precise, and open to every human being on Earth.
-          </p>
+          <p style={S.tagline}>{t("home.tagline")}</p>
+          <p style={S.sub}>{t("home.sub")}</p>
           <div style={S.heroBtns}>
-            <Link to="/kundali"  style={S.btnPrimary}>Get My Birth Chart</Link>
-            <Link to="/matching" style={S.btnSecondary}>Check Kundali Matching</Link>
+            <Link to="/kundali"  style={S.btnPrimary}>{t("home.btnChart")}</Link>
+            <Link to="/matching" style={S.btnSecondary}>{t("home.btnMatch")}</Link>
           </div>
         </div>
       </section>
@@ -78,7 +77,7 @@ export default function Home() {
                 <li key={p} style={S.point}>✦ {p}</li>
               ))}
             </ul>
-            <Link to={f.link} style={S.featureBtn}>{f.cta}</Link>
+            <Link to={f.link} style={S.featureBtn}>{f.ctaKey ? t(f.ctaKey) : f.cta}</Link>
           </div>
         ))}
       </section>
@@ -86,8 +85,8 @@ export default function Home() {
       {/* ── OUR PRINCIPLES ── */}
       <section style={S.principles}>
         <div style={S.principlesInner}>
-          <h2 style={S.secTitle}>Our Principles</h2>
-          <p style={S.secSub}>The principles that guide every reading on this site</p>
+          <h2 style={S.secTitle}>{t("home.principlesTitle")}</h2>
+          <p style={S.secSub}>{t("home.principlesSub")}</p>
           <div style={S.principleGrid}>
             {PRINCIPLES.map(p => (
               <div key={p.title} style={S.principleCard}>
