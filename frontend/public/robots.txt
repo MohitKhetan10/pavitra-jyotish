@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://frontend-rosy-three-57.vercel.app/sitemap.xml
+Sitemap: https://pavitra-jyotish.netlify.app/sitemap.xml
