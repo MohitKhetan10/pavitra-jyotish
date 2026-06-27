@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
 import { useToast }    from "../components/Toast.jsx";
+import { generateKundaliPDF } from "../utils/generatePDF.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -407,6 +408,7 @@ export default function Kundali() {
   const [interpretation, setInterp] = useState("");
   const [interpreting, setInterping] = useState(false);
   const [birthParams, setBirthParams] = useState(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const set = k => e => setForm({ ...form, [k]: e.target.value });
 
   useEffect(() => {
@@ -416,6 +418,16 @@ export default function Kundali() {
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
     showToast(t("k.shareDone"));
+  }
+
+  async function handleDownloadPDF() {
+    if (!chart || !report) return;
+    setPdfGenerating(true);
+    try {
+      await generateKundaliPDF({ chart, report, interpretation, birthParams });
+    } finally {
+      setPdfGenerating(false);
+    }
   }
 
   function parseParams(f = form) {
@@ -511,7 +523,7 @@ export default function Kundali() {
             </select>
           </label>
         </div>
-        <button style={loading ? S.btnOff : S.btn} onClick={() => generate()} disabled={loading}>
+        <button className="btn-shimmer" style={loading ? S.btnOff : S.btn} onClick={() => generate()} disabled={loading}>
           {t("k.btn")}
         </button>
         {error && <p style={S.err}>⚠ {error}</p>}
@@ -729,9 +741,16 @@ export default function Kundali() {
             ))}
           </div>
 
-          {/* ── SHARE ── */}
-          <div style={{textAlign:"center", margin:"8px 0 4px"}}>
+          {/* ── SHARE + DOWNLOAD ── */}
+          <div style={{display:"flex", gap:12, justifyContent:"center", margin:"8px 0 4px", flexWrap:"wrap"}}>
             <button style={S.shareBtn} onClick={handleShare}>{t("k.shareBtn")}</button>
+            <button
+              style={pdfGenerating ? S.pdfBtnOff : S.pdfBtn}
+              onClick={handleDownloadPDF}
+              disabled={pdfGenerating}
+            >
+              {pdfGenerating ? "⏳ Preparing PDF…" : "⬇ Download PDF Report"}
+            </button>
           </div>
 
           {/* ── PANDIT READING ── */}
@@ -741,7 +760,7 @@ export default function Kundali() {
               Brihat Parashara Hora Shastra · Phaladeepika · Saravali · Jataka Parijata
             </p>
             {!interpretation && !interpreting && (
-              <button style={S.aiBtn} onClick={getInterpretation}>
+              <button className="btn-shimmer" style={S.aiBtn} onClick={getInterpretation}>
                 {t("k.readingBtn")}
               </button>
             )}
@@ -872,6 +891,12 @@ const S = {
   shareBtn:{ padding:"8px 20px", background:"transparent", border:`1px solid ${G}44`,
              borderRadius:8, color:MUTED, fontSize:13, cursor:"pointer",
              fontFamily:"system-ui,sans-serif", letterSpacing:0.5 },
+  pdfBtn:  { padding:"10px 24px", background:`linear-gradient(135deg,#3d1200,#6b2400)`,
+             border:`1px solid ${G}`, borderRadius:8, color:GSFT, fontSize:13,
+             fontWeight:"bold", cursor:"pointer", fontFamily:"system-ui,sans-serif", letterSpacing:0.5 },
+  pdfBtnOff:{ padding:"10px 24px", background:"#1e1000",
+              border:`1px solid ${G}44`, borderRadius:8, color:MUTED, fontSize:13,
+              cursor:"not-allowed", fontFamily:"system-ui,sans-serif" },
   aiBtn: { padding:"13px 28px",
            background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
            border:`1px solid ${G}`, borderRadius:10, color:GSFT, fontSize:16,
