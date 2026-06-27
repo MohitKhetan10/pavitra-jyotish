@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
 import { useToast }    from "../components/Toast.jsx";
+import { generateNumerologyPDF } from "../utils/generateNumerologyPDF.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 const G = "#c9973a", BG = "#0f0400", TXT = "#fdf0d5", MUTED = "#b89060", CARD = "#1a0900";
@@ -416,6 +417,7 @@ export default function Numerology() {
   const [reading, setReading] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   useEffect(() => {
     const q = Object.fromEntries(searchParams);
@@ -435,6 +437,16 @@ export default function Numerology() {
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
     showToast(t("n.shareDone"));
+  }
+
+  async function handleDownloadPDF() {
+    if (!result) return;
+    setPdfGenerating(true);
+    try {
+      await generateNumerologyPDF({ result, reading });
+    } finally {
+      setPdfGenerating(false);
+    }
   }
 
   function set(k,v) { setForm(f=>({...f,[k]:v})); setFormError(""); }
@@ -506,9 +518,22 @@ export default function Numerology() {
 
         {result && !formError && (<>
 
-          {/* Share */}
-          <div style={{textAlign:"center",marginBottom:8}}>
+          {/* Share + Download */}
+          <div style={{display:"flex",gap:12,justifyContent:"center",marginBottom:8,flexWrap:"wrap"}}>
             <button style={S.shareBtn} onClick={handleShare}>{t("n.shareBtn")}</button>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={pdfGenerating}
+              style={{
+                padding:"10px 24px",
+                background: pdfGenerating ? "#1e1000" : `linear-gradient(135deg,#3d1200,#6b2400)`,
+                border:`1px solid ${pdfGenerating ? G+"44" : G}`,
+                borderRadius:8, color: pdfGenerating ? MUTED : "#f0d080",
+                fontSize:13, fontWeight:"bold", cursor: pdfGenerating ? "not-allowed" : "pointer",
+                fontFamily:"system-ui,sans-serif", letterSpacing:0.5,
+              }}>
+              {pdfGenerating ? "⏳ Preparing PDF…" : "⬇ Download PDF Report"}
+            </button>
           </div>
 
           {/* Badge row */}
