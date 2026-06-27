@@ -136,7 +136,7 @@ function DetailRow({ label, value, good, warning }) {
     <div className="row-glow" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start",
                   padding:"6px 0", borderBottom:`1px solid ${BORDER}` }}>
       <span style={{ color:MUTED, fontSize:12, minWidth:120 }}>{label}</span>
-      <span style={{ color:col, fontSize:12, fontWeight:"bold", maxWidth:"58%", textAlign:"right" }}>{value}</span>
+      <span style={{ color:col, fontSize:12, fontWeight:"bold", maxWidth:"58%", textAlign:"right", wordBreak:"break-word" }}>{value}</span>
     </div>
   );
 }
@@ -155,7 +155,7 @@ function BirthForm({ label, color, values, onChange }) {
 
   return (
     <div className="card-lift" style={{ flex:1, background:`${color}0d`, border:`1px solid ${color}44`,
-                  borderRadius:16, padding:"20px 20px 16px", minWidth:280 }}>
+                  borderRadius:16, padding:"20px 20px 16px", minWidth:"min(280px,100%)" }}>
       <h3 style={{ color:color, margin:"0 0 16px", fontSize:15, textTransform:"uppercase",
                    letterSpacing:2, fontFamily:"Georgia,serif" }}>{label}</h3>
 
@@ -316,7 +316,7 @@ export default function Matchmaking() {
   const r = result;
 
   return (
-    <div style={{ background:DEEP, minHeight:"100vh", padding:"80px 0 60px" }}>
+    <div style={{ background:DEEP, minHeight:"100vh", padding:"80px 0 60px", overflowX:"hidden" }}>
       <div style={{ maxWidth:980, margin:"0 auto", padding:"0 20px" }}>
 
         {/* ── Header ── */}
@@ -375,7 +375,7 @@ export default function Matchmaking() {
             {/* ── Score banner ── */}
             <div style={{ background:CARD, border:`1px solid ${G}55`, borderRadius:20,
                           padding:"28px 32px", marginBottom:20,
-                          display:"flex", alignItems:"center", gap:32, flexWrap:"wrap" }}>
+                          display:"flex", alignItems:"center", gap:32, flexWrap:"wrap", justifyContent:"center" }}>
               <CircleScore score={r.total} max={r.max} color={r.verdict_color} verdict={r.verdict}/>
               <div style={{ flex:1, minWidth:200 }}>
                 <div style={{ color:MUTED, fontSize:11, textTransform:"uppercase", letterSpacing:2,
@@ -487,7 +487,7 @@ export default function Matchmaking() {
 
             {/* ── 7th House ── */}
             <InfoSection title="7th House — Marital House Analysis" icon="🏠">
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:12 }}>
                 {[
                   { label:"Person 1", data:r.seventh_house?.p1, color:P1C },
                   { label:"Person 2", data:r.seventh_house?.p2, color:P2C },
@@ -527,7 +527,7 @@ export default function Matchmaking() {
 
             {/* ── Venus & Jupiter ── */}
             <InfoSection title="Venus & Jupiter — Romantic & Marital Karakas" icon="♀">
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:12, marginBottom:12 }}>
                 {[
                   { label:"Person 1", data:r.venus_jupiter?.p1, color:P1C },
                   { label:"Person 2", data:r.venus_jupiter?.p2, color:P2C },
@@ -566,7 +566,7 @@ export default function Matchmaking() {
                 The Darakaraka is the planet with the lowest degree in the chart (Jaimini system).
                 It represents the nature and qualities of the person's spouse.
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:12, marginBottom:12 }}>
                 {[
                   { label:"Person 1's Spouse Profile", color:P1C, dk:r.darakaraka?.p1_dk, desc:r.darakaraka?.p1_dk_desc },
                   { label:"Person 2's Spouse Profile", color:P2C, dk:r.darakaraka?.p2_dk, desc:r.darakaraka?.p2_dk_desc },
@@ -599,7 +599,7 @@ export default function Matchmaking() {
             {/* ── Lagna Compatibility ── */}
             <InfoSection title="Lagna Compatibility — Ascendant Relationship" icon="⬆">
               <div style={{ background:"#0f0500", border:`1px solid ${G}22`, borderRadius:10, padding:"16px" }}>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:14 }}>
+                <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:16, marginBottom:14 }}>
                   {[
                     { label:"Person 1", lagna:r.lagna?.p1_lagna, lord:r.lagna?.p1_lord, color:P1C },
                     { label:"Person 2", lagna:r.lagna?.p2_lagna, lord:r.lagna?.p2_lord, color:P2C },
@@ -641,7 +641,7 @@ export default function Matchmaking() {
 
             {/* ── Dasha Timing ── */}
             <InfoSection title="Dasha Compatibility & Marriage Timing" icon="⏳">
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:12, marginBottom:12 }}>
                 {[
                   { label:"Person 1", maha:r.dasha?.p1_mahadasha, antar:r.dasha?.p1_antardasha,
                     antarEnd:r.dasha?.p1_antardasha_end, quality:r.dasha?.p1_quality, color:P1C },
@@ -672,7 +672,7 @@ export default function Matchmaking() {
             {/* ── Rahu/Ketu Karma ── */}
             <InfoSection title="Karmic Axis — Rahu & Ketu (Past-Life Bond)" icon="🔮">
               <div style={{ background:"#0f0500", border:`1px solid ${G}22`, borderRadius:10, padding:"16px" }}>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:14 }}>
+                <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:16, marginBottom:14 }}>
                   {[
                     { label:"Person 1", rahu:r.rahu_ketu?.p1_rahu, rahuH:r.rahu_ketu?.p1_rahu_house,
                       ketu:r.rahu_ketu?.p1_ketu, ketuH:r.rahu_ketu?.p1_ketu_house, color:P1C },

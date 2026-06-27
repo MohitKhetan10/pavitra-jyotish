@@ -367,7 +367,7 @@ function PersonalYearSection({ day, month }) {
             <div style={{color:PY[pastPY].color,fontSize:13,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Personal Year {CURRENT_YEAR-1} — Completed</div>
             <div style={{color:TXT,fontSize:18,fontFamily:"Georgia,serif"}}>{past.theme}</div>
           </div>
-          <div style={{...S.pyTag, background:`${PY[pastPY].color}22`, color:PY[pastPY].color}}>Verify this against your {CURRENT_YEAR-1}</div>
+          <div style={{...S.pyTag, background:`${PY[pastPY].color}22`, color:PY[pastPY].color, ...(isMobile ? {marginLeft:0} : {})}}>Verify this against your {CURRENT_YEAR-1}</div>
         </div>
         <div style={{color:MUTED,fontSize:14,lineHeight:1.8}}>{past.past}</div>
       </div>
@@ -393,7 +393,7 @@ function PersonalYearSection({ day, month }) {
             <div style={{color:PY[nextPY].color,fontSize:13,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Personal Year {CURRENT_YEAR+1} — Approaching</div>
             <div style={{color:TXT,fontSize:18,fontFamily:"Georgia,serif"}}>{next.theme}</div>
           </div>
-          <div style={{...S.pyTag, background:`${PY[nextPY].color}22`, color:PY[nextPY].color}}>Prepare now</div>
+          <div style={{...S.pyTag, background:`${PY[nextPY].color}22`, color:PY[nextPY].color, ...(isMobile ? {marginLeft:0} : {})}}>Prepare now</div>
         </div>
         <div style={{color:MUTED,fontSize:14,lineHeight:1.8}}>{next.next}</div>
       </div>
@@ -404,6 +404,7 @@ function PersonalYearSection({ day, month }) {
 // ── Main Page ───────────────────────────────────────────────────────────────
 
 export default function Numerology() {
+  const isMobile = useIsMobile();
   const { t }    = useLang();
   const [searchParams, setSearchParams] = useSearchParams();
   const [form, setForm] = useState(() => {
@@ -544,7 +545,7 @@ export default function Numerology() {
               ...(result.namank?[{num:result.namank, label:"Namank", sub:"Name Number"}]:[]),
               {num:result.currPY,   label:`PY ${CURRENT_YEAR}`, sub:"Personal Year", special:true},
             ].map(({num,label,sub,special})=>(
-              <div key={label} style={{...S.badge, borderColor:special?"#ffffff44":PBORD[num], opacity:special?0.9:1}}>
+              <div key={label} style={{...S.badge, borderColor:special?"#ffffff44":PBORD[num], opacity:special?0.9:1, ...(isMobile ? {flex:"1 1 calc(50% - 8px)",maxWidth:"calc(50% - 8px)",minWidth:"unset"} : {})}}>
                 <div className="num-pop" style={{fontSize:44,fontWeight:"bold",color:special?"#aaaaaa":PCOL[num],fontFamily:"Georgia,serif",lineHeight:1}}><CountUp to={num} /></div>
                 <div style={{color:TXT,fontWeight:"bold",fontSize:15,marginTop:6}}>{label}</div>
                 <div style={{color:MUTED,fontSize:12,marginTop:3}}>{sub}</div>
@@ -608,24 +609,24 @@ export default function Numerology() {
 }
 
 const S = {
-  page:       {minHeight:"100vh",background:BG,color:TXT,fontFamily:"system-ui,sans-serif"},
+  page:       {minHeight:"100vh",background:BG,color:TXT,fontFamily:"system-ui,sans-serif",overflowX:"hidden"},
   hero:       {textAlign:"center",padding:"60px 20px 40px",background:"linear-gradient(180deg,#1a0800 0%,#0f0400 100%)"},
   heroSym:    {fontSize:60,color:G,fontFamily:"Georgia,serif",marginBottom:8},
   heroTitle:  {fontSize:34,fontWeight:"bold",color:TXT,margin:"0 0 12px",fontFamily:"Georgia,serif",letterSpacing:2},
   heroSub:    {color:MUTED,fontSize:15,maxWidth:520,margin:"0 auto"},
-  container:  {maxWidth:900,margin:"0 auto",padding:"40px 20px 80px"},
-  card:       {background:CARD,border:"1px solid",borderColor:`${G}33`,borderRadius:12,padding:"28px 24px",marginBottom:24},
+  container:  {maxWidth:900,margin:"0 auto",padding:"40px 20px 80px",boxSizing:"border-box"},
+  card:       {background:CARD,border:"1px solid",borderColor:`${G}33`,borderRadius:12,padding:"28px 24px",marginBottom:24,boxSizing:"border-box"},
   row:        {display:"flex",gap:16,marginBottom:18,flexWrap:"wrap"},
   fg:         {display:"flex",flexDirection:"column",flex:1,minWidth:130},
   lbl:        {color:MUTED,fontSize:12,marginBottom:7,textTransform:"uppercase",letterSpacing:1},
-  inp:        {background:"#2a1200",border:`1px solid ${G}44`,borderRadius:8,padding:"11px 14px",color:TXT,fontSize:15,outline:"none"},
+  inp:        {background:"#2a1200",border:`1px solid ${G}44`,borderRadius:8,padding:"11px 14px",color:TXT,fontSize:15,outline:"none",boxSizing:"border-box"},
   btn:        {background:G,color:"#0f0400",border:"none",borderRadius:8,padding:"13px 28px",fontSize:14,fontWeight:"bold",cursor:"pointer",letterSpacing:1,marginTop:4},
   badgeRow:   {display:"flex",gap:16,justifyContent:"center",marginBottom:40,flexWrap:"wrap"},
   badge:      {background:CARD,border:"2px solid",borderRadius:12,padding:"20px 24px",textAlign:"center",minWidth:140,flex:1,maxWidth:200},
   secHead:    {fontSize:22,color:G,fontFamily:"Georgia,serif",margin:"0 0 12px",borderBottom:`1px solid ${G}33`,paddingBottom:12},
   secDesc:    {color:MUTED,fontSize:14,lineHeight:1.8,marginBottom:24},
   numHeader:  {display:"flex",alignItems:"center",gap:20,marginBottom:24,paddingBottom:20,borderBottom:"1px solid #ffffff11"},
-  grid3:      {display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:4},
+  grid3:      {display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:4},
   infoBox:    {background:"#2a110022",border:`1px solid ${G}22`,borderRadius:8,padding:"10px 14px"},
   twoCol:     {display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginTop:18},
   sLabel:     {color:G,fontSize:12,textTransform:"uppercase",letterSpacing:1.5,marginBottom:8,fontWeight:"bold"},

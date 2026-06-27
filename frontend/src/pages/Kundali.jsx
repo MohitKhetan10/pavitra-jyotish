@@ -327,6 +327,7 @@ function HouseCard({ h, rd, reportPlanets, expanded, onToggle }) {
 
 // ── Remedy accordion card ──────────────────────────────────────────────────
 function RemedyCard({ pname, pd, expanded, onToggle }) {
+  const isMobile = useIsMobile();
   const r = pd.remedy;
   if (!r) return null;
   const ps = PS[pname] || { border:"#555", text:"#ccc" };
@@ -339,7 +340,7 @@ function RemedyCard({ pname, pd, expanded, onToggle }) {
       }}
       onClick={onToggle}
     >
-      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8}}>
         <div style={{color:ps.border, fontWeight:"bold", fontSize:14}}>
           {SYM[pname]} {pname}
           <span style={{color:MUTED, fontWeight:"normal", fontSize:12, marginLeft:8}}>— {pd.status}</span>
@@ -352,7 +353,7 @@ function RemedyCard({ pname, pd, expanded, onToggle }) {
 
       {expanded && (
         <div style={{marginTop:12}}>
-          <div style={S.remedyGrid}>
+          <div style={{...S.remedyGrid, gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(180px,1fr))"}}>
             <div><span style={S.rlabel}>Fast Day</span><p style={S.rpText}>{r.day}</p></div>
             <div><span style={S.rlabel}>Color</span><p style={S.rpText}>{r.color}</p></div>
             <div><span style={S.rlabel}>Gemstone</span><p style={S.rpText}>{r.stone}</p></div>
@@ -629,7 +630,7 @@ export default function Kundali() {
           <div style={S.section}>
             <h2 style={S.secTitle}>Graha — Planetary Positions</h2>
             <p style={S.hint}>Click any planet card to see its full classical interpretation</p>
-            <div style={{...S.planetGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)"}}>
+            <div style={{...S.planetGrid, gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)"}}>
               {chart.planets.map((p, i) => (
                 <PlanetCard
                   key={p.name}
@@ -795,14 +796,15 @@ const MUTED= "#b89060";
 // ── Styles ────────────────────────────────────────────────────────────────
 const S = {
   page:    { minHeight:"100vh", background:DEEP, fontFamily:"'Georgia',serif",
-             color:TXT, padding:"24px 16px", maxWidth:1100, margin:"0 auto" },
+             color:TXT, padding:"24px 16px", maxWidth:1100, margin:"0 auto",
+             overflowX:"hidden", boxSizing:"border-box" },
   header:  { textAlign:"center", padding:"32px 0 24px", borderBottom:`1px solid ${G}22` },
   om:      { fontSize:48, color:G, lineHeight:1.2 },
   title:   { fontSize:40, fontWeight:"bold", color:GSFT, margin:"8px 0 4px", letterSpacing:2 },
   subtitle:{ color:MUTED, fontSize:13, margin:0 },
 
   card:    { background:SURF, borderRadius:16, padding:24, margin:"20px 0",
-             border:`1px solid ${G}44`, boxShadow:"0 4px 24px #00000088" },
+             border:`1px solid ${G}44`, boxShadow:"0 4px 24px #00000088", boxSizing:"border-box" },
   cardTitle:{ color:G, fontSize:18, fontWeight:"bold", marginBottom:16, marginTop:0,
               borderBottom:`1px solid ${G}33`, paddingBottom:10 },
 
@@ -810,9 +812,11 @@ const S = {
   field:   { display:"flex", flexDirection:"column", gap:5 },
   flabel:  { fontSize:11, color:MUTED, fontWeight:600, textTransform:"uppercase", letterSpacing:1 },
   input:   { padding:"10px 12px", borderRadius:8, border:`1px solid ${G}55`,
-             background:"#1e1000", color:TXT, fontSize:14, outline:"none" },
+             background:"#1e1000", color:TXT, fontSize:14, outline:"none",
+             width:"100%", boxSizing:"border-box" },
   select:  { padding:"10px 12px", borderRadius:8, border:`1px solid ${G}55`,
-             background:"#1e1000", color:TXT, fontSize:13, outline:"none", cursor:"pointer" },
+             background:"#1e1000", color:TXT, fontSize:13, outline:"none", cursor:"pointer",
+             width:"100%", boxSizing:"border-box" },
   btn:     { marginTop:20, width:"100%", padding:"14px",
              border:`1px solid ${G}`, borderRadius:10,
              background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
@@ -844,7 +848,7 @@ const S = {
              padding:14, marginBottom:10 },
 
   section: { background:SURF, border:`1px solid ${G}33`, borderRadius:14,
-             padding:24, margin:"16px 0" },
+             padding:24, margin:"16px 0", boxSizing:"border-box" },
   secTitle:{ color:G, fontSize:18, fontWeight:"bold", marginBottom:8, marginTop:0,
              borderBottom:`1px solid ${G}33`, paddingBottom:10 },
   hint:    { color:MUTED, fontSize:12, marginBottom:16, marginTop:-4, fontStyle:"italic" },
@@ -852,14 +856,14 @@ const S = {
   // planets
   planetGrid:{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 },
   planetCard:{ borderRadius:12, padding:14, border:"1px solid",
-               boxShadow:"0 2px 12px #00000066" },
-  pcHeader:  { display:"flex", alignItems:"flex-start" },
+               boxShadow:"0 2px 12px #00000066", minWidth:0 },
+  pcHeader:  { display:"flex", alignItems:"flex-start", flexWrap:"wrap" },
   badgeR:    { background:"#441100", color:"#ff8866", fontSize:10, padding:"2px 7px", borderRadius:4 },
   badgeC:    { background:"#3d2200", color:"#ffaa33", fontSize:10, padding:"2px 7px", borderRadius:4 },
 
   // houses
   houseGrid: { display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 },
-  houseCard: { background:SURF2, border:"1px solid", borderRadius:12, padding:14 },
+  houseCard: { background:SURF2, border:"1px solid", borderRadius:12, padding:14, minWidth:0 },
 
   // expanded sections
   expBlock:{ marginBottom:14 },
@@ -872,10 +876,12 @@ const S = {
   dashaCurrentBox:{ background:`linear-gradient(135deg,#2a1500,#1a0800)`,
                     border:`1px solid ${G}`, borderRadius:12, padding:"18px 20px", marginBottom:16 },
   dashaRow:       { display:"flex", justifyContent:"space-between", padding:"9px 14px",
-                    borderRadius:8, background:SURF2, border:`1px solid ${G}22`, fontSize:14 },
+                    borderRadius:8, background:SURF2, border:`1px solid ${G}22`, fontSize:14,
+                    flexWrap:"wrap", gap:4 },
   dashaActive:    { display:"flex", justifyContent:"space-between", padding:"9px 14px",
                     borderRadius:8, background:`linear-gradient(135deg,#5a2a00,#3d1500)`,
-                    border:`1px solid ${G}`, fontSize:14, color:GSFT },
+                    border:`1px solid ${G}`, fontSize:14, color:GSFT,
+                    flexWrap:"wrap", gap:4 },
 
   // remedies
   remedyCard:{ background:SURF2, borderLeft:"3px solid",
