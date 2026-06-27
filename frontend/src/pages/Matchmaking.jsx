@@ -158,11 +158,11 @@ function BirthForm({ label, color, values, onChange }) {
                    letterSpacing:2, fontFamily:"Georgia,serif" }}>{label}</h3>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10 }}>
-        {[["Year","year","text","1990"],["Month","month","number","1-12"],["Day","day","number","1-31"]].map(
-          ([lbl,k,t,ph]) => (
+        {[["Year","year","1990"],["Month","month","1-12"],["Day","day","1-31"]].map(
+          ([lbl,k,ph]) => (
             <div key={k}>
               <div style={{ color:MUTED, fontSize:11, marginBottom:4 }}>{lbl}</div>
-              <input type={t} placeholder={ph} value={values[k]} onChange={set(k)} style={inp}/>
+              <input type="number" placeholder={ph} value={values[k]} onChange={set(k)} style={inp}/>
             </div>
           )
         )}
