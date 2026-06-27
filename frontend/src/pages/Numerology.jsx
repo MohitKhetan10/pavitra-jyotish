@@ -384,18 +384,28 @@ export default function Numerology() {
   const [result, setResult]   = useState(null);
   const [reading, setReading] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  function set(k,v) { setForm(f=>({...f,[k]:v})); }
+  function set(k,v) { setForm(f=>({...f,[k]:v})); setFormError(""); }
 
   function calculate() {
-    const day=parseInt(form.day), month=parseInt(form.month), year=parseInt(form.year);
-    if(!day||!month||!year||day>31||month>12) return;
-    const moolank  = calcMoolank(day);
-    const bhagyank = calcBhagyank(day,month,year);
-    const namank   = form.name.trim() ? calcNamank(form.name.trim()) : null;
-    const currPY   = calcPersonalYear(day,month,CURRENT_YEAR);
-    setResult({moolank,bhagyank,namank,currPY,day,month,year,name:form.name.trim()});
-    setReading("");
+    try {
+      const day   = parseInt(form.day);
+      const month = parseInt(form.month);
+      const year  = parseInt(form.year);
+      if (isNaN(day)   || day   < 1 || day   > 31) { setFormError("Please enter a valid day (1–31)."); return; }
+      if (isNaN(month) || month < 1 || month > 12) { setFormError("Please enter a valid month (1–12)."); return; }
+      if (isNaN(year)  || year  < 1900 || year > 2099) { setFormError("Please enter a valid year (1900–2099)."); return; }
+      setFormError("");
+      const moolank  = calcMoolank(day);
+      const bhagyank = calcBhagyank(day, month, year);
+      const namank   = form.name.trim() ? calcNamank(form.name.trim()) : null;
+      const currPY   = calcPersonalYear(day, month, CURRENT_YEAR);
+      setResult({ moolank, bhagyank, namank, currPY, day, month, year, name: form.name.trim() });
+      setReading("");
+    } catch(e) {
+      setFormError("Something went wrong. Please check your inputs and try again.");
+    }
   }
 
   async function getReading() {
@@ -438,9 +448,10 @@ export default function Numerology() {
             <div style={S.fg}><label style={S.lbl}>Year</label><input style={S.inp} type="number" placeholder="YYYY" value={form.year} onChange={e=>set("year",e.target.value)} /></div>
           </div>
           <button style={S.btn} onClick={calculate}>✦ Calculate My Numbers</button>
+          {formError && <div style={{color:"#ff6655",fontSize:14,marginTop:12}}>{formError}</div>}
         </div>
 
-        {result && (<>
+        {result && !formError && (<>
 
           {/* Badge row */}
           <div style={S.badgeRow}>
