@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
 import { useToast }    from "../components/Toast.jsx";
+import { generateMatchPDF } from "../utils/generateMatchPDF.js";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -63,7 +64,7 @@ function DoshaBadge({ present, label, severity, desc }) {
   const [open, setOpen] = useState(false);
   const col = present ? "#cc4444" : "#44cc88";
   return (
-    <div style={{ border:`1px solid ${col}44`, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
+    <div className="badge-lift" style={{ border:`1px solid ${col}44`, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
                     padding:"10px 14px", cursor:"pointer", background:`${col}11` }}
            onClick={() => setOpen(o => !o)}>
@@ -87,7 +88,8 @@ function InfoSection({ title, icon, children, accent, defaultOpen=true }) {
   const borderCol = accent || G;
   return (
     <div style={{ border:`1px solid ${borderCol}33`, borderRadius:14, marginBottom:16, overflow:"hidden" }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+      <div className="section-hd"
+           style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
                     padding:"14px 18px", cursor:"pointer",
                     background:`linear-gradient(135deg,${borderCol}18,transparent)` }}
            onClick={() => setOpen(o => !o)}>
@@ -113,7 +115,7 @@ function MoonCard({ data, color, label }) {
     ["Sign Lord",  data.lord],
   ];
   return (
-    <div style={{ flex:1, background:`${color}11`, border:`1px solid ${color}44`,
+    <div className="moon-hover" style={{ flex:1, background:`${color}11`, border:`1px solid ${color}44`,
                   borderRadius:12, padding:"16px 18px", minWidth:200 }}>
       <div style={{ color:color, fontWeight:"bold", fontSize:13, textTransform:"uppercase",
                     letterSpacing:2, marginBottom:12 }}>{label}</div>
@@ -131,7 +133,7 @@ function MoonCard({ data, color, label }) {
 function DetailRow({ label, value, good, warning }) {
   const col = good ? "#44cc88" : warning ? "#ff8800" : TXT;
   return (
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start",
+    <div className="row-glow" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start",
                   padding:"6px 0", borderBottom:`1px solid ${BORDER}` }}>
       <span style={{ color:MUTED, fontSize:12, minWidth:120 }}>{label}</span>
       <span style={{ color:col, fontSize:12, fontWeight:"bold", maxWidth:"58%", textAlign:"right" }}>{value}</span>
@@ -152,7 +154,7 @@ function BirthForm({ label, color, values, onChange }) {
   };
 
   return (
-    <div style={{ flex:1, background:`${color}0d`, border:`1px solid ${color}44`,
+    <div className="card-lift" style={{ flex:1, background:`${color}0d`, border:`1px solid ${color}44`,
                   borderRadius:16, padding:"20px 20px 16px", minWidth:280 }}>
       <h3 style={{ color:color, margin:"0 0 16px", fontSize:15, textTransform:"uppercase",
                    letterSpacing:2, fontFamily:"Georgia,serif" }}>{label}</h3>
@@ -246,11 +248,22 @@ export default function Matchmaking() {
   const [err, setErr] = useState("");
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const aiRef = useRef(null);
 
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
     showToast(t("m.shareDone"));
+  }
+
+  async function handleDownloadPDF() {
+    if (!result) return;
+    setPdfGenerating(true);
+    try {
+      await generateMatchPDF({ result, p1, p2, aiText });
+    } finally {
+      setPdfGenerating(false);
+    }
   }
 
   function toNum(v, fallback=0) { const n=parseFloat(v); return isNaN(n)?fallback:n; }
@@ -326,7 +339,7 @@ export default function Matchmaking() {
         {err && <div style={{ background:"#2a0000", border:"1px solid #cc4444", borderRadius:8,
                                padding:"12px 16px", color:"#ff8888", marginBottom:16, fontSize:13 }}>{err}</div>}
 
-        <button onClick={handleMatch} disabled={loading}
+        <button onClick={handleMatch} disabled={loading} className="btn-shimmer"
                 style={{ width:"100%", padding:"16px", background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
                           border:`1px solid ${G}`, borderRadius:12, color:GSFT, fontSize:16,
                           fontWeight:"bold", cursor:"pointer", letterSpacing:2, marginBottom:32,
@@ -337,12 +350,25 @@ export default function Matchmaking() {
         {/* ══ RESULTS ══ */}
         {r && (
           <div id="match-results">
-            <div style={{ textAlign:"center", marginBottom:16 }}>
-              <button onClick={handleShare}
+            <div style={{ display:"flex", gap:12, justifyContent:"center", marginBottom:16, flexWrap:"wrap" }}>
+              <button onClick={handleShare} className="btn-shimmer"
                 style={{ padding:"8px 20px", background:"transparent", border:`1px solid ${G}44`,
                          borderRadius:8, color:MUTED, fontSize:13, cursor:"pointer",
                          fontFamily:"system-ui,sans-serif" }}>
                 {t("m.shareBtn")}
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={pdfGenerating}
+                style={{
+                  padding:"10px 24px",
+                  background: pdfGenerating ? "#1e1000" : `linear-gradient(135deg,#3d1200,#6b2400)`,
+                  border:`1px solid ${pdfGenerating ? G+"44" : G}`,
+                  borderRadius:8, color: pdfGenerating ? MUTED : GSFT,
+                  fontSize:13, fontWeight:"bold", cursor: pdfGenerating ? "not-allowed" : "pointer",
+                  fontFamily:"system-ui,sans-serif", letterSpacing:0.5,
+                }}>
+                {pdfGenerating ? "⏳ Preparing PDF…" : "⬇ Download PDF Report"}
               </button>
             </div>
 
@@ -382,7 +408,7 @@ export default function Matchmaking() {
             <InfoSection title="Ashtakoot — 8 Kootas (36 Points)" icon="⚖">
               <div style={{ display:"grid", gap:10 }}>
                 {r.kootas?.map(k => (
-                  <div key={k.name} style={{ display:"flex", alignItems:"center", gap:12,
+                  <div key={k.name} className="koota-row" style={{ display:"flex", alignItems:"center", gap:12,
                                               padding:"10px 12px", background:"#0f0500",
                                               borderRadius:8, border:`1px solid ${BORDER}` }}>
                     <div style={{ minWidth:120 }}>
@@ -685,7 +711,7 @@ export default function Matchmaking() {
               </div>
 
               {!aiText && (
-                <button onClick={handleAI} disabled={aiLoading}
+                <button onClick={handleAI} disabled={aiLoading} className="btn-shimmer"
                         style={{ display:"block", margin:"0 auto", padding:"14px 40px",
                                   background:`linear-gradient(135deg,#6b3a00,#3d1500)`,
                                   border:`1px solid ${G}`, borderRadius:10, color:GSFT,
