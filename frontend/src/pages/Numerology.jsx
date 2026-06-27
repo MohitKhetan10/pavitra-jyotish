@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
+import { useToast }    from "../components/Toast.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 const G = "#c9973a", BG = "#0f0400", TXT = "#fdf0d5", MUTED = "#b89060", CARD = "#1a0900";
@@ -211,6 +212,23 @@ function formatMd(text) {
 
 // ── Components ─────────────────────────────────────────────────────────────
 
+function CountUp({ to, duration = 800 }) {
+  const [val, setVal] = useState(0);
+  const rafRef = useRef(null);
+  useEffect(() => {
+    let start = null;
+    const step = (ts) => {
+      if (!start) start = ts;
+      const prog = Math.min((ts - start) / duration, 1);
+      setVal(Math.round(prog * to));
+      if (prog < 1) rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [to, duration]);
+  return val;
+}
+
 function InfoBox({ label, value }) {
   return (
     <div style={S.infoBox}>
@@ -235,7 +253,7 @@ function NumCard({ num, label }) {
   return (
     <div style={{...S.card, borderColor:PBORD[num]}}>
       <div style={{...S.numHeader, flexWrap:"wrap"}}>
-        <div style={{fontSize: isMobile ? 52 : 72,fontWeight:"bold",color:PCOL[num],fontFamily:"Georgia,serif",minWidth:60,textAlign:"center",lineHeight:1}}>{num}</div>
+        <div style={{fontSize: isMobile ? 52 : 72,fontWeight:"bold",color:PCOL[num],fontFamily:"Georgia,serif",minWidth:60,textAlign:"center",lineHeight:1}}><CountUp to={num} /></div>
         <div>
           <div style={{color:PBORD[num],fontSize: isMobile ? 17 : 20,fontFamily:"Georgia,serif"}}>{TITLE[num]}</div>
           <div style={{color:MUTED,fontSize:13,marginTop:4}}>{label} · ruled by {PLANET[num]}</div>
@@ -393,11 +411,11 @@ export default function Numerology() {
       ? { name: q.name||"", day:q.d, month:q.m, year:q.y }
       : { name:"", day:"", month:"", year:"" };
   });
+  const { showToast } = useToast();
   const [result, setResult]   = useState(null);
   const [reading, setReading] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [formError, setFormError] = useState("");
-  const [copied, setCopied]   = useState(false);
 
   useEffect(() => {
     const q = Object.fromEntries(searchParams);
@@ -416,8 +434,7 @@ export default function Numerology() {
 
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    showToast(t("n.shareDone"));
   }
 
   function set(k,v) { setForm(f=>({...f,[k]:v})); setFormError(""); }
@@ -491,9 +508,7 @@ export default function Numerology() {
 
           {/* Share */}
           <div style={{textAlign:"center",marginBottom:8}}>
-            <button style={S.shareBtn} onClick={handleShare}>
-              {copied ? t("n.shareDone") : t("n.shareBtn")}
-            </button>
+            <button style={S.shareBtn} onClick={handleShare}>{t("n.shareBtn")}</button>
           </div>
 
           {/* Badge row */}
@@ -505,7 +520,7 @@ export default function Numerology() {
               {num:result.currPY,   label:`PY ${CURRENT_YEAR}`, sub:"Personal Year", special:true},
             ].map(({num,label,sub,special})=>(
               <div key={label} style={{...S.badge, borderColor:special?"#ffffff44":PBORD[num], opacity:special?0.9:1}}>
-                <div style={{fontSize:44,fontWeight:"bold",color:special?"#aaaaaa":PCOL[num],fontFamily:"Georgia,serif",lineHeight:1}}>{num}</div>
+                <div className="num-pop" style={{fontSize:44,fontWeight:"bold",color:special?"#aaaaaa":PCOL[num],fontFamily:"Georgia,serif",lineHeight:1}}><CountUp to={num} /></div>
                 <div style={{color:TXT,fontWeight:"bold",fontSize:15,marginTop:6}}>{label}</div>
                 <div style={{color:MUTED,fontSize:12,marginTop:3}}>{sub}</div>
                 {!special && <div style={{color:PBORD[num],fontSize:12,marginTop:5}}>{TITLE[num]}</div>}
@@ -549,13 +564,16 @@ export default function Numerology() {
             <div style={{color:MUTED,fontSize:14,marginBottom:20}}>
               A synthesized reading of all your numbers — past years verified, present year decoded, next cycle mapped, full remedies for both ruling planets.
             </div>
-            {!reading && (
-              <button style={S.aiBtn} onClick={getReading} disabled={aiLoading}>
-                {aiLoading ? "Generating…" : t("n.readingBtn")}
-              </button>
+            {!reading && !aiLoading && (
+              <button style={S.aiBtn} onClick={getReading}>{t("n.readingBtn")}</button>
             )}
             {aiLoading && !reading && <div style={{color:MUTED,fontStyle:"italic",marginTop:16}}>Consulting the numbers…</div>}
-            {reading && <div style={S.aiText} dangerouslySetInnerHTML={{__html:formatMd(reading)}} />}
+            {reading && (
+              <div style={S.aiText}>
+                <span dangerouslySetInnerHTML={{__html:formatMd(reading)}} />
+                {aiLoading && <span className="blink-cursor" />}
+              </div>
+            )}
           </div>
 
         </>)}

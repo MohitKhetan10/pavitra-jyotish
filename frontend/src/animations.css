@@ -1,0 +1,104 @@
+/* ── Breathing OM ── */
+@keyframes omBreathe {
+  0%,100% { transform: scale(1);    opacity: 0.92; }
+  50%      { transform: scale(1.07); opacity: 1;    }
+}
+.om-breathe { display:inline-block; animation: omBreathe 4s ease-in-out infinite; transform-origin:center; }
+
+/* ── Page fade-in ── */
+@keyframes pageFade {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+.page-fade { animation: pageFade 0.38s ease-out both; }
+
+/* ── Card stagger reveal ── */
+@keyframes cardReveal {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+.card-reveal { animation: cardReveal 0.5s ease-out both; }
+
+/* ── Blinking text cursor ── */
+@keyframes cursorBlink {
+  0%,100% { opacity:1; }
+  50%      { opacity:0; }
+}
+.blink-cursor {
+  display:inline-block; width:2px; height:1em;
+  background:#c9973a; margin-left:3px;
+  vertical-align:text-bottom;
+  animation: cursorBlink 0.85s step-end infinite;
+}
+
+/* ── Pulsing loading dots ── */
+@keyframes dotBounce {
+  0%,80%,100% { transform:scale(0.5); opacity:0.3; }
+  40%          { transform:scale(1);   opacity:1;   }
+}
+.dot-pulse {
+  display:inline-block; width:8px; height:8px;
+  border-radius:50%; background:#c9973a;
+  animation: dotBounce 1.4s ease-in-out infinite;
+}
+.dot-pulse:nth-child(2) { animation-delay:0.2s; }
+.dot-pulse:nth-child(3) { animation-delay:0.4s; }
+
+/* ── Celestial orbit ── */
+@keyframes orbit {
+  from { transform:rotate(0deg);   }
+  to   { transform:rotate(360deg); }
+}
+.spin-cw  { animation: orbit 7s  linear infinite; display:inline-block; }
+.spin-ccw { animation: orbit 11s linear infinite reverse; display:inline-block; }
+
+/* ── Scroll reveal ── */
+.scroll-reveal {
+  opacity:0;
+  transform:translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.scroll-reveal.in-view { opacity:1; transform:translateY(0); }
+
+/* ── Toast slide ── */
+@keyframes toastIn  { from { transform:translateY(70px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+@keyframes toastOut { from { transform:translateY(0); opacity:1; } to { transform:translateY(70px); opacity:0; } }
+.toast-in  { animation: toastIn  0.38s cubic-bezier(0.34,1.56,0.64,1) both; }
+.toast-out { animation: toastOut 0.3s  ease-in both; }
+
+/* ── Nav active underline ── */
+.nav-item { position:relative; }
+.nav-item::after {
+  content:'';
+  position:absolute; bottom:-2px; left:50%;
+  transform:translateX(-50%) scaleX(0);
+  width:60%; height:2px;
+  background:#c9973a; border-radius:1px;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-item.is-active::after { transform:translateX(-50%) scaleX(1); }
+
+/* ── Input focus glow ── */
+input:focus, select:focus, textarea:focus {
+  outline:none !important;
+  border-color:#c9973a !important;
+  box-shadow:0 0 0 3px rgba(201,151,58,0.15) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ── Button press ── */
+button:active:not(:disabled) {
+  transform:scale(0.97);
+  transition:transform 0.1s ease;
+}
+
+/* ── Score bar transition ── */
+.score-bar-fill { transition: width 0.85s cubic-bezier(0.34,1,0.64,1); }
+
+/* ── CountUp number ── */
+@keyframes numPop {
+  0%  { transform:scale(0.85); opacity:0.4; }
+  70% { transform:scale(1.08); }
+  100%{ transform:scale(1);    opacity:1;   }
+}
+.num-pop { animation: numPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }

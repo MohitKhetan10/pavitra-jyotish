@@ -57,6 +57,7 @@ export default function Nav() {
         <div style={S.links}>
           {links.map(l => (
             <Link key={l.to} to={l.to}
+              className={`nav-item${pathname === l.to ? " is-active" : ""}`}
               style={pathname === l.to ? {...S.link, ...S.active} : S.link}>
               {l.label}
             </Link>

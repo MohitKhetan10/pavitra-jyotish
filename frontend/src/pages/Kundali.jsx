@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
+import { useToast }    from "../components/Toast.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -146,19 +147,24 @@ function SouthChart({ chart }) {
 }
 
 // ── Planet card (expandable) ───────────────────────────────────────────────
-function PlanetCard({ p, rd, expanded, onToggle }) {
+function PlanetCard({ p, rd, expanded, onToggle, index }) {
+  const [hovered, setHovered] = useState(false);
   const ps = PS[p.name] || { bg:"#111", border:"#555", text:"#ccc" };
   return (
     <div
+      className="card-reveal"
       style={{
         ...S.planetCard,
         background: ps.bg,
-        borderColor: expanded ? ps.border : ps.border + "66",
-        boxShadow: expanded ? `0 0 24px ${ps.border}33` : "none",
+        borderColor: expanded ? ps.border : hovered ? ps.border + "aa" : ps.border + "66",
+        boxShadow: expanded ? `0 0 24px ${ps.border}33` : hovered ? `0 0 18px ${ps.border}44` : "none",
         gridColumn: expanded ? "1 / -1" : "auto",
         cursor:"pointer", transition:"border-color 0.2s, box-shadow 0.2s",
+        animationDelay: `${(index || 0) * 80}ms`,
       }}
       onClick={onToggle}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       {/* Header row */}
       <div style={S.pcHeader}>
@@ -375,8 +381,9 @@ function RemedyCard({ pname, pd, expanded, onToggle }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function Kundali() {
-  const isMobile = useIsMobile();
-  const { t }    = useLang();
+  const isMobile        = useIsMobile();
+  const { t }           = useLang();
+  const { showToast }   = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const autoGenRef = useRef(false);
 
@@ -400,8 +407,6 @@ export default function Kundali() {
   const [interpretation, setInterp] = useState("");
   const [interpreting, setInterping] = useState(false);
   const [birthParams, setBirthParams] = useState(null);
-  const [copied, setCopied] = useState(false);
-
   const set = k => e => setForm({ ...form, [k]: e.target.value });
 
   useEffect(() => {
@@ -410,8 +415,7 @@ export default function Kundali() {
 
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    showToast(t("k.shareDone"));
   }
 
   function parseParams(f = form) {
@@ -508,10 +512,27 @@ export default function Kundali() {
           </label>
         </div>
         <button style={loading ? S.btnOff : S.btn} onClick={() => generate()} disabled={loading}>
-          {loading ? t("k.generating") : t("k.btn")}
+          {t("k.btn")}
         </button>
         {error && <p style={S.err}>⚠ {error}</p>}
       </div>
+
+      {/* ── Celestial loading state ── */}
+      {loading && (
+        <div style={{textAlign:"center", padding:"56px 0 40px"}}>
+          <div style={{fontSize:30, letterSpacing:10, marginBottom:18, color:G}}>
+            <span className="spin-cw">☉</span>
+            <span style={{opacity:0.55}}> ☽ ♂ ☿ ♃ </span>
+            <span className="spin-ccw">♀</span>
+          </div>
+          <div style={{color:MUTED, fontSize:14, fontFamily:"system-ui,sans-serif", marginBottom:14}}>
+            {t("k.generating")}
+          </div>
+          <div style={{display:"flex", gap:8, justifyContent:"center"}}>
+            <span className="dot-pulse" /><span className="dot-pulse" /><span className="dot-pulse" />
+          </div>
+        </div>
+      )}
 
       {/* ── RESULTS ── */}
       {chart && report && (
@@ -597,13 +618,14 @@ export default function Kundali() {
             <h2 style={S.secTitle}>Graha — Planetary Positions</h2>
             <p style={S.hint}>Click any planet card to see its full classical interpretation</p>
             <div style={{...S.planetGrid, gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)"}}>
-              {chart.planets.map(p => (
+              {chart.planets.map((p, i) => (
                 <PlanetCard
                   key={p.name}
                   p={p}
                   rd={report.planets?.[p.name]}
                   expanded={expandedPlanet === p.name}
                   onToggle={() => setExpandedPlanet(expandedPlanet === p.name ? null : p.name)}
+                  index={i}
                 />
               ))}
             </div>
@@ -709,9 +731,7 @@ export default function Kundali() {
 
           {/* ── SHARE ── */}
           <div style={{textAlign:"center", margin:"8px 0 4px"}}>
-            <button style={S.shareBtn} onClick={handleShare}>
-              {copied ? t("k.shareDone") : t("k.shareBtn")}
-            </button>
+            <button style={S.shareBtn} onClick={handleShare}>{t("k.shareBtn")}</button>
           </div>
 
           {/* ── PANDIT READING ── */}
@@ -725,16 +745,16 @@ export default function Kundali() {
                 {t("k.readingBtn")}
               </button>
             )}
-            {interpreting && (
+            {interpreting && !interpretation && (
               <div style={{color:MUTED, fontSize:15, padding:"24px 0", textAlign:"center", letterSpacing:1}}>
                 🕉 &nbsp; The Jyotishi is reading your chart…
               </div>
             )}
             {interpretation && (
-              <div
-                style={S.aiText}
-                dangerouslySetInnerHTML={{__html: formatMd(interpretation)}}
-              />
+              <div style={S.aiText}>
+                <span dangerouslySetInnerHTML={{__html: formatMd(interpretation)}} />
+                {interpreting && <span className="blink-cursor" />}
+              </div>
             )}
           </div>
 

@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
+import { useToast }    from "../components/Toast.jsx";
 
 const API = import.meta.env.VITE_API_URL || "/api";
 
@@ -49,7 +50,9 @@ function lookupCity(str) {
 
 /* ── Sub-components ── */
 function ScoreBar({ score, max }) {
-  const pct = Math.round((score / max) * 100);
+  const [disp, setDisp] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setDisp(score), 150); return () => clearTimeout(t); }, [score]);
+  const pct = Math.round((disp / max) * 100);
   const col = pct >= 80 ? "#44dd88" : pct >= 60 ? "#88cc44" : pct >= 40 ? "#ddaa00" : pct >= 25 ? "#ff8800" : "#cc4444";
   return (
     <div style={{ display:"flex", alignItems:"center", gap:8, flex:1 }}>
@@ -223,10 +226,11 @@ function BirthForm({ label, color, values, onChange, cityLabel="City (quick fill
 
 /* ── Circular Score ── */
 function CircleScore({ score, max, color, verdict }) {
-  const pct = score / max;
+  const [disp, setDisp] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setDisp(score), 150); return () => clearTimeout(t); }, [score]);
   const r = 56, cx = 66, cy = 66;
   const circ = 2 * Math.PI * r;
-  const dash  = circ * pct;
+  const dash  = circ * (disp / max);
   return (
     <div style={{ textAlign:"center" }}>
       <svg width={132} height={132} style={{ display:"block", margin:"0 auto" }}>
@@ -249,6 +253,7 @@ const empty = { year:"", month:"", day:"", hour:"", minute:"", lat:"", lon:"", t
 export default function Matchmaking() {
   const isMobile = useIsMobile();
   const { t }    = useLang();
+  const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [p1, setP1] = useState(() => {
     const q = Object.fromEntries(searchParams);
@@ -267,13 +272,11 @@ export default function Matchmaking() {
   const [err, setErr] = useState("");
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const aiRef = useRef(null);
 
   function handleShare() {
     navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    showToast(t("m.shareDone"));
   }
 
   function toNum(v, fallback=0) { const n=parseFloat(v); return isNaN(n)?fallback:n; }
@@ -365,7 +368,7 @@ export default function Matchmaking() {
                 style={{ padding:"8px 20px", background:"transparent", border:`1px solid ${G}44`,
                          borderRadius:8, color:MUTED, fontSize:13, cursor:"pointer",
                          fontFamily:"system-ui,sans-serif" }}>
-                {copied ? t("m.shareDone") : t("m.shareBtn")}
+                {t("m.shareBtn")}
               </button>
             </div>
 
@@ -717,18 +720,19 @@ export default function Matchmaking() {
                 </button>
               )}
 
-              {aiText && (
-                <div style={{ color:TXT, fontSize:14, lineHeight:1.9, fontFamily:"system-ui,sans-serif" }}
-                     ref={aiRef}
-                     dangerouslySetInnerHTML={{ __html: aiText
-                       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#f0d080">$1</strong>')
-                       .replace(/\n/g, '<br/>') }}>
+              {aiLoading && !aiText && (
+                <div style={{ color:G, fontSize:13, textAlign:"center", marginTop:12 }}>
+                  ✦ The Pandit is consulting the charts…
                 </div>
               )}
 
-              {aiLoading && (
-                <div style={{ color:G, fontSize:13, textAlign:"center", marginTop:12 }}>
-                  ✦ The Pandit is consulting the charts…
+              {aiText && (
+                <div style={{ color:TXT, fontSize:14, lineHeight:1.9, fontFamily:"system-ui,sans-serif" }}
+                     ref={aiRef}>
+                  <span dangerouslySetInnerHTML={{ __html: aiText
+                    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#f0d080">$1</strong>')
+                    .replace(/\n/g, '<br/>') }} />
+                  {aiLoading && <span className="blink-cursor" />}
                 </div>
               )}
             </div>

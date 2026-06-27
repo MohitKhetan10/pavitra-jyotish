@@ -1,6 +1,19 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { useIsMobile } from "../hooks/useBreakpoint.js";
 import { useLang }     from "../context/LangContext.jsx";
+
+function useScrollReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll(".scroll-reveal");
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("in-view"); }),
+      { threshold: 0.15 }
+    );
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
 
 const FEATURES = [
   {
@@ -32,14 +45,15 @@ const PRINCIPLES = [
 
 export default function Home() {
   const isMobile = useIsMobile();
-  const { t } = useLang();
+  const { t }    = useLang();
+  useScrollReveal();
   return (
     <div style={S.page}>
 
       {/* ── HERO ── */}
       <section style={{...S.hero, padding: isMobile ? "60px 16px 40px" : "100px 24px 80px"}}>
         <div style={S.heroInner}>
-          <div style={S.om}>ॐ</div>
+          <div style={S.om} className="om-breathe">ॐ</div>
           <h1 style={{...S.title, fontSize: isMobile ? 34 : 68, letterSpacing: isMobile ? 1 : 3}}>Pavitra Jyotish</h1>
           <p style={S.tagline}>{t("home.tagline")}</p>
           <p style={S.sub}>{t("home.sub")}</p>
@@ -88,8 +102,8 @@ export default function Home() {
           <h2 style={S.secTitle}>{t("home.principlesTitle")}</h2>
           <p style={S.secSub}>{t("home.principlesSub")}</p>
           <div style={S.principleGrid}>
-            {PRINCIPLES.map(p => (
-              <div key={p.title} style={S.principleCard}>
+            {PRINCIPLES.map((p, i) => (
+              <div key={p.title} className="scroll-reveal" style={{...S.principleCard, transitionDelay:`${i*110}ms`}}>
                 <span style={S.principleIcon}>{p.icon}</span>
                 <h3 style={S.principleTitle}>{p.title}</h3>
                 <p style={S.principleDesc}>{p.desc}</p>
